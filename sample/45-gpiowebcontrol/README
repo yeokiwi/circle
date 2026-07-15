@@ -1,0 +1,93 @@
+README
+
+This sample program is only working on Raspberry Pi models with an on-board
+Ethernet controller (or a supported USB Ethernet device) and an SD card.
+
+It runs a small HTTP web server which lets you do the following from a web
+browser:
+
+	1. Set any of the exposed GPIO pins of the 40-pin header to a HIGH or
+	   LOW output level.
+
+	2. Output a PWM waveform with a selectable duty cycle (0% to 100%) on
+	   multiple GPIO pins, using two different generators:
+
+	   a) Hardware PWM (high frequency, 1 kHz to 20 MHz). This uses the
+	      hardware PWM peripheral of the SoC. It has exactly two channels,
+	      each wired to a fixed pin:
+
+		Channel 1: GPIO12 (Alt0) or GPIO18 (Alt5)
+		Channel 2: GPIO13 (Alt0) or GPIO19 (Alt5)
+
+	      Both channels share a single frequency but have an independent
+	      duty cycle. Near the top of the frequency range the duty cycle
+	      resolution becomes coarse, because the PWM clock has to run at
+	      (frequency x range) and the range (number of duty steps) shrinks
+	      as the frequency rises. The web page reports the frequency that
+	      was actually generated, which can differ slightly from the value
+	      you requested (the clock is derived by an integer divider from a
+	      fixed source clock).
+
+	   b) Software PWM (1 Hz to 100 kHz) on any of the other header pins,
+	      each with its own frequency and duty cycle. Any number of pins
+	      can run software PWM at the same time.
+
+	3. Read and write the SD card: list the files in the root directory,
+	   upload (download to the SD card) new files, download files back to
+	   your computer and delete files.
+
+	4. Reboot the Raspberry Pi.
+
+The software PWM is generated using the class CUserTimer (see sample/36-softpwm),
+which fires a fine grained timer interrupt (via the FIQ). A single handler
+schedules the next edge across all active software PWM pins and toggles them.
+The time base is 1 microsecond (USER_CLOCKHZ), so the software PWM is limited to
+lower frequencies (capped at 100 kHz) and, being interrupt driven, has some
+jitter which grows with the frequency and the number of active pins. For clean,
+high frequency output use the hardware PWM channels described above.
+
+The hardware PWM is driven by the class CPWMOutput (see sample/13-pwmoutput) in
+M/S mode. This sample selects the clock source, integer divider and range
+automatically from the requested frequency. It is available on the Raspberry Pi
+1 to 4 only; on the Raspberry Pi 5 (RP1) only the software PWM is available.
+
+WARNING: A PWM clock near 100 MHz (needed to reach 20 MHz output) is beyond the
+officially specified range of the PWM peripheral. The output may be less clean
+at the very highest frequencies. For a very clean fixed-frequency 50% clock on
+the dedicated clock pins, see the class CGPIOClock and sample/11-gpioclock.
+
+The SD card is accessed with the FatFs file system (addon/fatfs) on top of the
+EMMC driver (addon/SDCard). Long file names are supported. Only the root
+directory is listed.
+
+Before building this sample you need to build the two add-on libraries it uses:
+
+	make -C ../../addon/SDCard
+	make -C ../../addon/fatfs
+
+You may also have to update the network configuration (DHCP is used by default)
+in kernel.cpp to meet your local network configuration. Don't forget to connect
+your local Ethernet to the Ethernet connector of the Raspberry Pi.
+
+First the Act LED blinks 5 times to show the program has started. After
+initialization the program is waiting for incoming TCP connections on port 80
+(http). The IP address to use is printed on the screen and the serial log. Open
+that URL ("http://<ip-address>/") in your web browser on another computer on
+your network.
+
+The controllable pins are the usual header GPIOs in Broadcom (BCM) numbering,
+except GPIO14 and GPIO15, which are used by the serial port for the system log.
+
+Notes and limitations:
+
+	- File downloads are limited to the content buffer size (see
+	  MAX_CONTENT_SIZE in webserver.cpp). Uploads are limited by
+	  MAX_UPLOAD_SIZE.
+
+	- The SD card is the same card the program was booted from. Deleting or
+	  overwriting the firmware or kernel files will make the Raspberry Pi
+	  unbootable, so be careful which files you remove.
+
+WARNING: Driving GPIO pins connects them directly to the Raspberry Pi SoC. Make
+sure that whatever you connect to a pin is safe to drive (3.3V logic, no shorts
+to 5V or GND on an output pin). You use this at your own risk.
