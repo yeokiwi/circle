@@ -1,0 +1,22 @@
+sysinit.o sysinit.d: sysinit.cpp ../include/circle/startup.h \
+ ../include/circle/sysconfig.h ../include/circle/memorymap.h \
+ ../include/circle/memorymap64.h ../include/circle/macros.h \
+ ../include/circle/types.h ../include/assert.h ../include/circle/memio.h \
+ ../include/circle/bcm2835.h ../include/circle/bcm2836.h \
+ ../include/circle/bcm2712.h ../include/circle/machineinfo.h \
+ ../include/circle/bcmpropertytags.h ../include/circle/bcmmailbox.h \
+ ../include/circle/spinlock.h ../include/circle/synchronize.h \
+ ../include/circle/synchronize64.h ../include/circle/devicetreeblob.h \
+ ../include/circle/gpiopin.h ../include/circle/gpiopin2712.h \
+ ../include/circle/memory.h ../include/circle/translationtable64.h \
+ ../include/circle/armv8mmu.h ../include/circle/heapallocator.h \
+ ../include/circle/pageallocator.h ../include/circle/interrupt.h \
+ ../include/circle/bcm2835int.h ../include/circle/bcm2711int.h \
+ ../include/circle/exceptionstub.h ../include/circle/southbridge.h \
+ ../include/circle/rp1int.h ../include/circle/bcmpciehostbridge.h \
+ ../include/circle/timer.h ../include/circle/string.h \
+ ../include/circle/stdarg.h ../include/circle/ptrlist.h \
+ ../include/circle/actled.h ../include/circle/virtualgpiopin.h \
+ ../include/circle/chainboot.h ../include/circle/qemu.h \
+ ../include/circle/multicore.h ../include/circle/version.h \
+ ../include/circle/util.h

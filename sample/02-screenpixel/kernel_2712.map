@@ -1,0 +1,1685 @@
+Archive member included to satisfy reference by file (symbol)
+
+../../lib/libcircle.a(actled.o)
+                              kernel.o (CActLED::CActLED(bool))
+../../lib/libcircle.a(devicenameservice.o)
+                              kernel.o (CDeviceNameService::CDeviceNameService())
+../../lib/libcircle.a(koptions.o)
+                              kernel.o (CKernelOptions::~CKernelOptions())
+../../lib/libcircle.a(machineinfo.o)
+                              ../../lib/libcircle.a(actled.o) (CMachineInfo::GetActLEDInfo() const)
+../../lib/libcircle.a(screen.o)
+                              kernel.o (CScreenDevice::~CScreenDevice())
+../../lib/libcircle.a(string.o)
+                              ../../lib/libcircle.a(devicenameservice.o) (CString::~CString())
+../../lib/libcircle.a(sysinit.o)
+                              main.o (halt)
+../../lib/libcircle.a(timer.o)
+                              ../../lib/libcircle.a(sysinit.o) (CTimer::GetClockTicks())
+../../lib/libcircle.a(util.o)
+                              ../../lib/libcircle.a(devicenameservice.o) (strlen)
+../../lib/libcircle.a(util_fast.o)
+                              ../../lib/libcircle.a(sysinit.o) (memset)
+../../lib/libcircle.a(chainboot.o)
+                              ../../lib/libcircle.a(sysinit.o) (IsChainBootEnabled)
+../../lib/libcircle.a(new.o)  ../../lib/libcircle.a(devicenameservice.o) (operator new(unsigned long))
+../../lib/libcircle.a(heapallocator.o)
+                              ../../lib/libcircle.a(new.o) (CHeapAllocator::Allocate(unsigned long))
+../../lib/libcircle.a(font8x16.o)
+                              kernel.o (Font8x16)
+../../lib/libcircle.a(memory64.o)
+                              ../../lib/libcircle.a(sysinit.o) (CMemorySystem::Destructor())
+../../lib/libcircle.a(startup64.o)
+                              (_start)
+../../lib/libcircle.a(synchronize64.o)
+                              ../../lib/libcircle.a(devicenameservice.o) (EnterCritical)
+../../lib/libcircle.a(translationtable64.o)
+                              ../../lib/libcircle.a(memory64.o) (CTranslationTable::GetBaseAddress() const)
+../../lib/libcircle.a(interruptgic.o)
+                              ../../lib/libcircle.a(sysinit.o) (CInterruptSystem::CInterruptSystem())
+../../lib/libcircle.a(devicetreeblob.o)
+                              ../../lib/libcircle.a(machineinfo.o) (CDeviceTreeBlob::CDeviceTreeBlob(void const*))
+../../lib/libcircle.a(southbridge.o)
+                              ../../lib/libcircle.a(sysinit.o) (CSouthbridge::CSouthbridge(CInterruptSystem*))
+../../lib/libcircle.a(alloc.o)
+                              ../../lib/libcircle.a(translationtable64.o) (palloc)
+../../lib/libcircle.a(assert.o)
+                              ../../lib/libcircle.a(devicenameservice.o) (assertion_failed)
+../../lib/libcircle.a(bcmframebuffer.o)
+                              ../../lib/libcircle.a(screen.o) (CBcmFrameBuffer::CBcmFrameBuffer(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, bool))
+../../lib/libcircle.a(bcmpropertytags.o)
+                              ../../lib/libcircle.a(koptions.o) (CBcmPropertyTags::CBcmPropertyTags(bool))
+../../lib/libcircle.a(debug.o)
+                              ../../lib/libcircle.a(assert.o) (DebugStackTrace(unsigned long const*, char const*))
+../../lib/libcircle.a(delayloop.o)
+                              ../../lib/libcircle.a(timer.o) (DelayLoop)
+../../lib/libcircle.a(device.o)
+                              ../../lib/libcircle.a(screen.o) (CDevice::Read(void*, unsigned long))
+../../lib/libcircle.a(dmachannel.o)
+                              ../../lib/libcircle.a(bcmframebuffer.o) (CDMAChannel::CDMAChannel(unsigned int, CInterruptSystem*))
+../../lib/libcircle.a(logger.o)
+                              ../../lib/libcircle.a(machineinfo.o) (CLogger::Get())
+../../lib/libcircle.a(ptrlist.o)
+                              ../../lib/libcircle.a(timer.o) (CPtrList::CPtrList())
+../../lib/libcircle.a(terminal.o)
+                              ../../lib/libcircle.a(screen.o) (CTerminalDevice::CTerminalDevice(CDisplay*, unsigned int, TFont const&, CCharGenerator::TFontFlags))
+../../lib/libcircle.a(pageallocator.o)
+                              ../../lib/libcircle.a(memory64.o) (CPageAllocator::CPageAllocator())
+../../lib/libcircle.a(exceptionstub64.o)
+                              ../../lib/libcircle.a(startup64.o) (VectorTable)
+../../lib/libcircle.a(bcmpciehostbridge.o)
+                              ../../lib/libcircle.a(southbridge.o) (CBcmPCIeHostBridge::CBcmPCIeHostBridge(unsigned int, CInterruptSystem*))
+../../lib/libcircle.a(dma4channel.o)
+                              ../../lib/libcircle.a(dmachannel.o) (CDMA4Channel::CDMA4Channel(unsigned int, CInterruptSystem*))
+../../lib/libcircle.a(display.o)
+                              ../../lib/libcircle.a(bcmframebuffer.o) (CDisplay::GetParent() const)
+../../lib/libcircle.a(bcmmailbox.o)
+                              ../../lib/libcircle.a(bcmpropertytags.o) (CBcmMailBox::CBcmMailBox(unsigned int, bool))
+../../lib/libcircle.a(chargenerator.o)
+                              ../../lib/libcircle.a(terminal.o) (CCharGenerator::CCharGenerator(TFont const&, CCharGenerator::TFontFlags))
+../../lib/libcircle.a(exceptionhandler64.o)
+                              ../../lib/libcircle.a(exceptionstub64.o) (ExceptionHandler)
+
+Merging program properties
+
+
+Discarded input sections
+
+ .group         0x0000000000000000        0xc ../../lib/libcircle.a(screen.o)
+ .group         0x0000000000000000        0xc ../../lib/libcircle.a(string.o)
+ .group         0x0000000000000000        0xc ../../lib/libcircle.a(bcmframebuffer.o)
+ .group         0x0000000000000000        0xc ../../lib/libcircle.a(device.o)
+ .group         0x0000000000000000        0xc ../../lib/libcircle.a(terminal.o)
+ .group         0x0000000000000000        0xc ../../lib/libcircle.a(display.o)
+ .group         0x0000000000000000        0xc ../../lib/libcircle.a(exceptionhandler64.o)
+ .note.gnu.property
+                0x0000000000000000        0x0 ../../lib/libcircle.a(exceptionhandler64.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+Address of section .init set to 0x80000
+
+.init           0x0000000000080000       0xa8
+ *(.init)
+ .init          0x0000000000080000       0xa8 ../../lib/libcircle.a(startup64.o)
+                0x0000000000080000                _start
+
+.text           0x0000000000080800    0x12a9c
+ *(.text*)
+ .text          0x0000000000080800        0x0 main.o
+ .text.startup  0x0000000000080800       0x38 main.o
+                0x0000000000080800                main
+ *fill*         0x0000000000080838        0x8 
+ .text          0x0000000000080840      0x200 kernel.o
+                0x0000000000080840                CKernel::CKernel()
+                0x0000000000080840                CKernel::CKernel()
+                0x00000000000808a8                CKernel::Initialize()
+                0x00000000000808b0                CKernel::Run()
+                0x0000000000080a08                CKernel::~CKernel()
+                0x0000000000080a08                CKernel::~CKernel()
+ .text          0x0000000000080a40      0x138 ../../lib/libcircle.a(actled.o)
+                0x0000000000080a40                CActLED::CActLED(bool)
+                0x0000000000080a40                CActLED::CActLED(bool)
+                0x0000000000080aa0                CActLED::~CActLED()
+                0x0000000000080aa0                CActLED::~CActLED()
+                0x0000000000080aac                CActLED::On()
+                0x0000000000080ac8                CActLED::Off()
+                0x0000000000080ae4                CActLED::Blink(unsigned int, unsigned int, unsigned int)
+                0x0000000000080b6c                CActLED::Get()
+ *fill*         0x0000000000080b78        0x8 
+ .text          0x0000000000080b80      0x82c ../../lib/libcircle.a(devicenameservice.o)
+                0x0000000000080b80                CDeviceNameService::CDeviceNameService()
+                0x0000000000080b80                CDeviceNameService::CDeviceNameService()
+                0x0000000000080bc0                CDeviceNameService::~CDeviceNameService()
+                0x0000000000080bc0                CDeviceNameService::~CDeviceNameService()
+                0x0000000000080c20                CDeviceNameService::AddDevice(char const*, CDevice*, bool)
+                0x0000000000080d04                CDeviceNameService::RemoveDevice(char const*, bool)
+                0x0000000000080e40                CDeviceNameService::GetDevice(char const*, bool)
+                0x0000000000080f40                CDeviceNameService::EnumerateDevices(bool (*)(CDevice*, char const*, bool, void*), void*)
+                0x0000000000080fe0                CDeviceNameService::Get()
+                0x0000000000081010                CDeviceNameService::AddDevice(char const*, unsigned int, CDevice*, bool)
+                0x0000000000081088                CDeviceNameService::RemoveDevice(char const*, unsigned int, bool)
+                0x00000000000810f0                CDeviceNameService::GetDevice(char const*, unsigned int, bool)
+                0x0000000000081160                CDeviceNameService::ListDevices(CDevice*, bool)
+ *fill*         0x00000000000813ac       0x14 
+ .text          0x00000000000813c0      0x958 ../../lib/libcircle.a(koptions.o)
+                0x00000000000813c0                CKernelOptions::~CKernelOptions()
+                0x00000000000813c0                CKernelOptions::~CKernelOptions()
+                0x0000000000081428                CKernelOptions::GetWidth() const
+                0x0000000000081430                CKernelOptions::GetHeight() const
+                0x0000000000081440                CKernelOptions::GetLogDevice() const
+                0x0000000000081448                CKernelOptions::GetLogLevel() const
+                0x0000000000081450                CKernelOptions::GetKeyMap() const
+                0x0000000000081460                CKernelOptions::GetUSBPowerDelay() const
+                0x0000000000081468                CKernelOptions::GetUSBFullSpeed() const
+                0x0000000000081470                CKernelOptions::GetUSBBoost() const
+                0x0000000000081480                CKernelOptions::GetUSBIgnore() const
+                0x0000000000081488                CKernelOptions::GetUSBSoundChannels() const
+                0x0000000000081490                CKernelOptions::GetSoundDevice() const
+                0x00000000000814a0                CKernelOptions::GetSoundOption() const
+                0x00000000000814a8                CKernelOptions::GetCPUSpeed() const
+                0x00000000000814b0                CKernelOptions::GetSoCMaxTemp() const
+                0x00000000000814c0                CKernelOptions::GetGPIOFanPin() const
+                0x00000000000814c8                CKernelOptions::GetTouchScreen() const
+                0x00000000000814e0                CKernelOptions::GetBacklight() const
+                0x00000000000814e8                CKernelOptions::GetAppOptionString(char const*, char const*) const
+                0x000000000008154c                CKernelOptions::GetAppOptionSignedDecimal(char const*, int) const
+                0x00000000000815e0                CKernelOptions::Get()
+                0x00000000000815ec                CKernelOptions::GetToken()
+                0x0000000000081650                CKernelOptions::GetOptionValue(char*)
+                0x0000000000081680                CKernelOptions::GetDecimal(char const*)
+                0x00000000000816e0                CKernelOptions::GetAppOptionDecimal(char const*, unsigned int) const
+                0x0000000000081760                CKernelOptions::GetDecimals(char*, unsigned int*, unsigned int)
+                0x0000000000081844                CKernelOptions::CKernelOptions()
+                0x0000000000081844                CKernelOptions::CKernelOptions()
+ *fill*         0x0000000000081d18        0x8 
+ .text          0x0000000000081d20     0x11dc ../../lib/libcircle.a(machineinfo.o)
+                0x0000000000081d28                CMachineInfo::~CMachineInfo()
+                0x0000000000081d28                CMachineInfo::~CMachineInfo()
+                0x0000000000081d80                CMachineInfo::GetMachineModel() const
+                0x0000000000081d88                CMachineInfo::GetMachineName() const
+                0x0000000000081da0                CMachineInfo::GetModelMajor() const
+                0x0000000000081da8                CMachineInfo::GetModelRevision() const
+                0x0000000000081db0                CMachineInfo::GetSoCType() const
+                0x0000000000081dc0                CMachineInfo::GetSoCStepping() const
+                0x0000000000081dc8                CMachineInfo::GetRAMSize() const
+                0x0000000000081dd0                CMachineInfo::GetRAMSizeEarly()
+                0x0000000000081de0                CMachineInfo::GetSoCName() const
+                0x0000000000081e00                CMachineInfo::GetRevisionRaw() const
+                0x0000000000081e08                CMachineInfo::GetActLEDInfo() const
+                0x0000000000081e20                CMachineInfo::GetClockRate(unsigned int) const
+                0x0000000000081fc4                CMachineInfo::GetGPIOPin(TGPIOVirtualPin) const
+                0x000000000008206c                CMachineInfo::GetGPIOClockSourceRate(unsigned int)
+                0x0000000000082090                CMachineInfo::GetDevice(TDeviceId) const
+                0x00000000000820c4                CMachineInfo::ArePWMChannelsSwapped() const
+                0x0000000000082100                CMachineInfo::AllocateDMAChannel(unsigned int)
+                0x00000000000821d0                CMachineInfo::FreeDMAChannel(unsigned int)
+                0x0000000000082260                CMachineInfo::AllocateDMAChannelRP1(unsigned int)
+                0x0000000000082328                CMachineInfo::FreeDMAChannelRP1(unsigned int)
+                0x00000000000823b0                CMachineInfo::FetchDTB()
+                0x0000000000082428                CMachineInfo::CMachineInfo()
+                0x0000000000082428                CMachineInfo::CMachineInfo()
+                0x0000000000082b00                CMachineInfo::CheckDTB(bool)
+                0x0000000000082cac                CMachineInfo::GetDTB() const
+                0x0000000000082cc0                CMachineInfo::GetPCIeMemory(unsigned int) const
+                0x0000000000082d24                CMachineInfo::GetPCIeDMAMemory(unsigned int) const
+                0x0000000000082ecc                CMachineInfo::Get()
+ *fill*         0x0000000000082efc        0x4 
+ .text          0x0000000000082f00      0x414 ../../lib/libcircle.a(screen.o)
+                0x0000000000082f00                CScreenDevice::Write(void const*, unsigned long)
+                0x0000000000082f20                CScreenDevice::~CScreenDevice()
+                0x0000000000082f20                CScreenDevice::~CScreenDevice()
+                0x0000000000082fa0                CScreenDevice::~CScreenDevice()
+                0x0000000000082fc0                CScreenDevice::CScreenDevice(unsigned int, unsigned int, TFont const&, CCharGenerator::TFontFlags, unsigned int)
+                0x0000000000082fc0                CScreenDevice::CScreenDevice(unsigned int, unsigned int, TFont const&, CCharGenerator::TFontFlags, unsigned int)
+                0x0000000000083028                CScreenDevice::Initialize()
+                0x0000000000083128                CScreenDevice::Resize(unsigned int, unsigned int)
+                0x000000000008318c                CScreenDevice::GetWidth() const
+                0x00000000000831a0                CScreenDevice::GetHeight() const
+                0x00000000000831a8                CScreenDevice::GetColumns() const
+                0x00000000000831b0                CScreenDevice::GetRows() const
+                0x00000000000831c0                CScreenDevice::GetFrameBuffer()
+                0x00000000000831c8                CScreenDevice::SetPixel(unsigned int, unsigned int, unsigned short)
+                0x00000000000831e0                CScreenDevice::GetPixel(unsigned int, unsigned int)
+                0x0000000000083268                CScreenDevice::Rotor(unsigned int, unsigned int)
+                0x0000000000083304                CScreenDevice::SetCursorBlock(bool)
+                0x000000000008330c                CScreenDevice::Update(unsigned int)
+ *fill*         0x0000000000083314        0xc 
+ .text          0x0000000000083320     0x1b4c ../../lib/libcircle.a(string.o)
+                0x0000000000083320                CString::~CString()
+                0x0000000000083320                CString::~CString()
+                0x0000000000083330                CString::~CString()
+                0x0000000000083408                CString::CString()
+                0x0000000000083408                CString::CString()
+                0x0000000000083420                CString::CString(char const*)
+                0x0000000000083420                CString::CString(char const*)
+                0x0000000000083468                CString::CString(CString const&)
+                0x0000000000083468                CString::CString(CString const&)
+                0x00000000000834cc                CString::CString(CString&&)
+                0x00000000000834cc                CString::CString(CString&&)
+                0x00000000000834f0                CString::operator char const*() const
+                0x0000000000083508                CString::operator=(char const*)
+                0x0000000000083560                CString::operator=(CString const&)
+                0x00000000000835d0                CString::operator=(CString&&)
+                0x0000000000083640                CString::c_str() const
+                0x0000000000083660                CString::GetLength() const
+                0x0000000000083670                CString::Append(char const*)
+                0x0000000000083720                CString::operator+=(char const*)
+                0x0000000000083740                CString::operator+=(CString const&)
+                0x0000000000083770                CString::Append(char)
+                0x0000000000083790                CString::operator+=(char)
+                0x00000000000837c0                CString::Compare(char const*) const
+                0x00000000000837e0                CString::Find(char) const
+                0x0000000000083820                CString::TrimRight(char const*)
+                0x00000000000838a4                CString::Replace(char const*, char const*)
+                0x0000000000083a70                CString::PutChar(char, unsigned long)
+                0x0000000000083acc                CString::PutString(char const*)
+                0x0000000000083b28                CString::ReserveSpace(unsigned long)
+                0x0000000000083bd0                CString::ntoa(char*, unsigned long, unsigned int, bool)
+                0x0000000000083c48                CString::lltoa(char*, unsigned long long, unsigned int, bool)
+                0x0000000000083cc8                CString::ftoa(char*, double, unsigned int)
+                0x0000000000083f20                CString::FormatV(char const*, std::__va_list)
+                0x0000000000084e08                CString::Format(char const*, ...)
+ *fill*         0x0000000000084e6c       0x14 
+ .text          0x0000000000084e80      0x328 ../../lib/libcircle.a(sysinit.o)
+                0x0000000000084e80                __aeabi_atexit
+                0x0000000000084e84                __cxa_atexit
+                0x0000000000084e88                __errno
+                0x0000000000084ea0                set_qemu_exit_status
+                0x0000000000084ea4                __GetCurrentStackNoWeak
+                0x0000000000084ee0                GetCurrentStack
+                0x0000000000084f10                halt
+                0x0000000000084f2c                error_halt
+                0x0000000000084f68                reboot
+                0x0000000000084f90                poweroff
+                0x0000000000084fa4                is_power_button_pressed
+                0x000000000008502c                sysinit
+ *fill*         0x00000000000851a8       0x18 
+ .text          0x00000000000851c0      0xff0 ../../lib/libcircle.a(timer.o)
+                0x00000000000851c0                CTimer::CTimer(CInterruptSystem*)
+                0x00000000000851c0                CTimer::CTimer(CInterruptSystem*)
+                0x0000000000085244                CTimer::~CTimer()
+                0x0000000000085244                CTimer::~CTimer()
+                0x0000000000085330                CTimer::SetTimeZone(int)
+                0x0000000000085350                CTimer::GetTimeZone() const
+                0x0000000000085360                CTimer::SetTime(unsigned int, bool)
+                0x0000000000085400                CTimer::GetClockTicks()
+                0x0000000000085420                CTimer::GetClockTicks64()
+                0x0000000000085440                CTimer::GetTicks() const
+                0x0000000000085448                CTimer::GetUptime() const
+                0x0000000000085450                CTimer::GetUptime(unsigned int*, unsigned int*)
+                0x0000000000085520                CTimer::GetTime() const
+                0x0000000000085528                CTimer::GetLocalTime(unsigned int*, unsigned int*)
+                0x0000000000085600                CTimer::GetUniversalTime() const
+                0x0000000000085620                CTimer::GetUniversalTime(unsigned int*, unsigned int*)
+                0x0000000000085720                CTimer::GetTimeString()
+                0x0000000000085950                CTimer::StartKernelTimer(unsigned int, void (*)(unsigned long, void*, void*), void*, void*)
+                0x0000000000085ab0                CTimer::CancelKernelTimer(unsigned long)
+                0x0000000000085b68                CTimer::PollKernelTimers()
+                0x0000000000085ca0                CTimer::InterruptHandler()
+                0x0000000000085db0                CTimer::InterruptHandler(void*)
+                0x0000000000085de0                CTimer::TuneMsDelay()
+                0x0000000000085e84                CTimer::Initialize()
+                0x0000000000085f60                CTimer::RegisterUpdateTimeHandler(bool (*)(unsigned int, unsigned int))
+                0x0000000000085fb0                CTimer::RegisterPeriodicHandler(void (*)())
+                0x0000000000086020                CTimer::SimpleMsDelay(unsigned int)
+                0x0000000000086080                CTimer::SimpleusDelay(unsigned int)
+                0x00000000000860c8                CTimer::IsLeapYear(unsigned int)
+                0x000000000008610c                CTimer::GetDaysOfMonth(unsigned int, unsigned int)
+                0x0000000000086180                CTimer::Get()
+ *fill*         0x00000000000861b0       0x10 
+ .text          0x00000000000861c0      0x7f8 ../../lib/libcircle.a(util.o)
+                0x00000000000861c0                memmove
+                0x0000000000086200                memcmp
+                0x0000000000086244                memmem
+                0x00000000000862ac                strlen
+                0x00000000000862e0                strnlen
+                0x000000000008630c                strcmp
+                0x0000000000086380                strcasecmp
+                0x0000000000086408                strncmp
+                0x000000000008646c                strncasecmp
+                0x0000000000086508                strcpy
+                0x0000000000086540                strncpy
+                0x000000000008656c                strcat
+                0x00000000000865ac                strncat
+                0x0000000000086608                strchr
+                0x0000000000086630                strstr
+                0x0000000000086680                strtok_r
+                0x0000000000086760                strtoul
+                0x00000000000868f0                strtoull
+                0x0000000000086900                atoi
+                0x0000000000086920                char2int
+                0x0000000000086928                ether_crc
+ .text          0x00000000000869b8       0xb0 ../../lib/libcircle.a(util_fast.o)
+                0x00000000000869b8                memset
+                0x0000000000086a08                memcpy
+ *fill*         0x0000000000086a68       0x18 
+ .text          0x0000000000086a80       0xbc ../../lib/libcircle.a(chainboot.o)
+                0x0000000000086acc                EnableChainBoot
+                0x0000000000086b0c                IsChainBootEnabled
+                0x0000000000086b20                DoChainBoot
+ *fill*         0x0000000000086b3c        0x4 
+ .text          0x0000000000086b40      0x328 ../../lib/libcircle.a(new.o)
+                0x0000000000086b40                operator new(unsigned long, int)
+                0x0000000000086bc8                operator new[](unsigned long, int)
+                0x0000000000086c50                operator new(unsigned long, void*)
+                0x0000000000086c60                operator new[](unsigned long, void*)
+                0x0000000000086c68                operator new(unsigned long)
+                0x0000000000086c80                operator new[](unsigned long)
+                0x0000000000086ca0                operator delete(void*)
+                0x0000000000086cc8                operator delete[](void*)
+                0x0000000000086cf0                operator delete(void*, unsigned long)
+                0x0000000000086d20                operator delete[](void*, unsigned long)
+                0x0000000000086d48                operator new(unsigned long, std::align_val_t)
+                0x0000000000086d80                operator new[](unsigned long, std::align_val_t)
+                0x0000000000086dc0                operator delete(void*, std::align_val_t)
+                0x0000000000086de8                operator delete[](void*, std::align_val_t)
+                0x0000000000086e10                operator delete(void*, unsigned long, std::align_val_t)
+                0x0000000000086e40                operator delete[](void*, unsigned long, std::align_val_t)
+ *fill*         0x0000000000086e68       0x18 
+ .text          0x0000000000086e80      0x534 ../../lib/libcircle.a(heapallocator.o)
+                0x0000000000086e80                CHeapAllocator::CHeapAllocator(char const*)
+                0x0000000000086e80                CHeapAllocator::CHeapAllocator(char const*)
+                0x0000000000086ee0                CHeapAllocator::~CHeapAllocator()
+                0x0000000000086ee0                CHeapAllocator::~CHeapAllocator()
+                0x0000000000086ee4                CHeapAllocator::Setup(unsigned long, unsigned long, unsigned long)
+                0x0000000000086f00                CHeapAllocator::GetFreeSpace() const
+                0x0000000000086f0c                CHeapAllocator::DoAllocate(unsigned long)
+                0x0000000000087128                CHeapAllocator::Allocate(unsigned long)
+                0x000000000008712c                CHeapAllocator::DoFree(void*)
+                0x00000000000872a0                CHeapAllocator::Free(void*)
+                0x00000000000872a4                CHeapAllocator::DoReAllocate(void*, unsigned long)
+                0x00000000000873b0                CHeapAllocator::ReAllocate(void*, unsigned long)
+ .text          0x00000000000873b4        0x0 ../../lib/libcircle.a(font8x16.o)
+ *fill*         0x00000000000873b4        0xc 
+ .text          0x00000000000873c0      0x350 ../../lib/libcircle.a(memory64.o)
+                0x00000000000873c0                CMemorySystem::Destructor()
+                0x0000000000087420                CMemorySystem::~CMemorySystem()
+                0x0000000000087420                CMemorySystem::~CMemorySystem()
+                0x0000000000087460                CMemorySystem::SetupHighMem()
+                0x00000000000874c0                CMemorySystem::GetMemSize() const
+                0x0000000000087500                CMemorySystem::Get()
+                0x000000000008752c                CMemorySystem::EnableMMU()
+                0x00000000000875c8                CMemorySystem::CMemorySystem(bool)
+                0x00000000000875c8                CMemorySystem::CMemorySystem(bool)
+                0x0000000000087704                CMemorySystem::GetCoherentPage(unsigned int)
+ .text          0x0000000000087710        0x0 ../../lib/libcircle.a(startup64.o)
+ *fill*         0x0000000000087710       0x10 
+ .text          0x0000000000087720      0x5f0 ../../lib/libcircle.a(synchronize64.o)
+                0x0000000000087720                CurrentExecutionLevel
+                0x0000000000087740                EnterCritical
+                0x0000000000087800                LeaveCritical
+                0x0000000000087860                InvalidateDataCache
+                0x0000000000087a24                InvalidateDataCacheL1Only
+                0x0000000000087a60                CleanDataCache
+                0x0000000000087c24                InvalidateDataCacheRange
+                0x0000000000087c68                CleanDataCacheRange
+                0x0000000000087cac                CleanAndInvalidateDataCacheRange
+                0x0000000000087cf0                SyncDataAndInstructionCache
+ *fill*         0x0000000000087d10       0x10 
+ .text          0x0000000000087d20      0x63c ../../lib/libcircle.a(translationtable64.o)
+                0x0000000000087d20                CTranslationTable::~CTranslationTable()
+                0x0000000000087d20                CTranslationTable::~CTranslationTable()
+                0x0000000000087d28                CTranslationTable::GetBaseAddress() const
+                0x0000000000087d60                CTranslationTable::CreateLevel3Table(unsigned long)
+                0x0000000000088050                CTranslationTable::CTranslationTable(unsigned long)
+                0x0000000000088050                CTranslationTable::CTranslationTable(unsigned long)
+ *fill*         0x000000000008835c        0x4 
+ .text          0x0000000000088360      0xb64 ../../lib/libcircle.a(interruptgic.o)
+                0x0000000000088360                CInterruptSystem::CInterruptSystem()
+                0x0000000000088360                CInterruptSystem::CInterruptSystem()
+                0x00000000000883a0                CInterruptSystem::~CInterruptSystem()
+                0x00000000000883a0                CInterruptSystem::~CInterruptSystem()
+                0x00000000000883d0                CInterruptSystem::Destructor()
+                0x0000000000088400                CInterruptSystem::Initialize()
+                0x0000000000088588                CInterruptSystem::DisconnectFIQ()
+                0x00000000000886a0                CInterruptSystem::EnableIRQ(unsigned int)
+                0x0000000000088740                CInterruptSystem::ConnectIRQ(unsigned int, void (*)(void*), void*)
+                0x000000000008880c                CInterruptSystem::DisableIRQ(unsigned int)
+                0x00000000000888ac                CInterruptSystem::DisconnectIRQ(unsigned int)
+                0x0000000000088984                CInterruptSystem::EnableFIQ(unsigned int)
+                0x0000000000088a4c                CInterruptSystem::ConnectFIQ(unsigned int, void (*)(void*), void*)
+                0x0000000000088b68                CInterruptSystem::DisableFIQ()
+                0x0000000000088be0                CInterruptSystem::Get()
+                0x0000000000088c0c                CInterruptSystem::CallIRQHandler(unsigned int)
+                0x0000000000088c64                CInterruptSystem::InterruptHandler()
+                0x0000000000088d0c                InterruptHandler
+                0x0000000000088d10                CInterruptSystem::InitializeSecondary()
+                0x0000000000088d40                CInterruptSystem::SendIPI(unsigned int, unsigned int)
+                0x0000000000088da8                CInterruptSystem::CallSecureMonitor(unsigned int, unsigned int)
+                0x0000000000088dc0                CInterruptSystem::SecureMonitorHandler(unsigned int, unsigned int)
+                0x0000000000088ec0                SecureMonitorHandler
+ *fill*         0x0000000000088ec4       0x1c 
+ .text          0x0000000000088ee0      0x7a4 ../../lib/libcircle.a(devicetreeblob.o)
+                0x0000000000088ee0                CDeviceTreeBlob::CDeviceTreeBlob(void const*)
+                0x0000000000088ee0                CDeviceTreeBlob::CDeviceTreeBlob(void const*)
+                0x0000000000088fa4                CDeviceTreeBlob::~CDeviceTreeBlob()
+                0x0000000000088fa4                CDeviceTreeBlob::~CDeviceTreeBlob()
+                0x0000000000088fc0                CDeviceTreeBlob::FindNodeInternal(char const*, TDeviceTreeNode const*, TDeviceTreeNode const**) const
+                0x0000000000089344                CDeviceTreeBlob::FindNode(char const*, TDeviceTreeNode const*) const
+                0x000000000008934c                CDeviceTreeBlob::FindProperty(TDeviceTreeNode const*, char const*) const
+                0x0000000000089540                CDeviceTreeBlob::GetPropertyValueLength(TDeviceTreeProperty const*) const
+                0x0000000000089590                CDeviceTreeBlob::GetPropertyValue(TDeviceTreeProperty const*) const
+                0x00000000000895c8                CDeviceTreeBlob::GetPropertyValueWord(TDeviceTreeProperty const*, unsigned int) const
+ *fill*         0x0000000000089684       0x1c 
+ .text          0x00000000000896a0      0x818 ../../lib/libcircle.a(southbridge.o)
+                0x00000000000896a0                CSouthbridge::CSouthbridge(CInterruptSystem*)
+                0x00000000000896a0                CSouthbridge::CSouthbridge(CInterruptSystem*)
+                0x0000000000089740                CSouthbridge::~CSouthbridge()
+                0x0000000000089740                CSouthbridge::~CSouthbridge()
+                0x00000000000897e0                CSouthbridge::Initialize()
+                0x0000000000089928                CSouthbridge::EnableIRQ(unsigned int)
+                0x0000000000089a00                CSouthbridge::ConnectIRQ(unsigned int, void (*)(void*), void*)
+                0x0000000000089ac0                CSouthbridge::DisableIRQ(unsigned int)
+                0x0000000000089b60                CSouthbridge::DisconnectIRQ(unsigned int)
+                0x0000000000089c20                CSouthbridge::InterruptHandler(void*)
+                0x0000000000089d6c                CSouthbridge::Get()
+                0x0000000000089da0                CSouthbridge::DumpStatus()
+ *fill*         0x0000000000089eb8        0x8 
+ .text          0x0000000000089ec0      0x154 ../../lib/libcircle.a(alloc.o)
+                0x0000000000089ec0                malloc
+                0x0000000000089ee0                memalign
+                0x0000000000089f20                free
+                0x0000000000089f48                calloc
+                0x0000000000089fc0                realloc
+                0x0000000000089fec                palloc
+                0x000000000008a000                pfree
+ *fill*         0x000000000008a014        0xc 
+ .text          0x000000000008a020       0x8c ../../lib/libcircle.a(assert.o)
+                0x000000000008a020                assertion_failed
+ *fill*         0x000000000008a0ac       0x14 
+ .text          0x000000000008a0c0      0x974 ../../lib/libcircle.a(bcmframebuffer.o)
+                0x000000000008a0c0                CBcmFrameBuffer::SetPixel(unsigned int, unsigned int, unsigned int)
+                0x000000000008a124                CBcmFrameBuffer::GetWidth() const
+                0x000000000008a12c                CBcmFrameBuffer::GetHeight() const
+                0x000000000008a140                CBcmFrameBuffer::GetDepth() const
+                0x000000000008a148                CBcmFrameBuffer::~CBcmFrameBuffer()
+                0x000000000008a148                CBcmFrameBuffer::~CBcmFrameBuffer()
+                0x000000000008a1a0                CBcmFrameBuffer::SetArea(CDisplay::TArea const&, void const*, void (*)(void*), void*)
+                0x000000000008a280                CBcmFrameBuffer::DMACompletionRoutine(unsigned int, unsigned int, bool, void*)
+                0x000000000008a364                CBcmFrameBuffer::~CBcmFrameBuffer()
+                0x000000000008a3b0                CBcmFrameBuffer::CBcmFrameBuffer(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, bool)
+                0x000000000008a3b0                CBcmFrameBuffer::CBcmFrameBuffer(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, bool)
+                0x000000000008a580                CBcmFrameBuffer::SetPalette(unsigned char, unsigned short)
+                0x000000000008a5e0                CBcmFrameBuffer::SetPalette32(unsigned char, unsigned int)
+                0x000000000008a620                CBcmFrameBuffer::GetVirtWidth() const
+                0x000000000008a628                CBcmFrameBuffer::GetVirtHeight() const
+                0x000000000008a630                CBcmFrameBuffer::GetPitch() const
+                0x000000000008a640                CBcmFrameBuffer::GetBuffer() const
+                0x000000000008a648                CBcmFrameBuffer::GetSize() const
+                0x000000000008a650                CBcmFrameBuffer::UpdatePalette()
+                0x000000000008a740                CBcmFrameBuffer::SetVirtualOffset(unsigned int, unsigned int)
+                0x000000000008a800                CBcmFrameBuffer::WaitForVerticalSync()
+                0x000000000008a868                CBcmFrameBuffer::SetBacklightBrightness(unsigned int)
+                0x000000000008a8e0                CBcmFrameBuffer::Initialize()
+                0x000000000008aa00                CBcmFrameBuffer::SetDisplay()
+                0x000000000008aa20                CBcmFrameBuffer::GetNumDisplays()
+ *fill*         0x000000000008aa34        0xc 
+ .text          0x000000000008aa40      0x260 ../../lib/libcircle.a(bcmpropertytags.o)
+                0x000000000008aa40                CBcmPropertyTags::CBcmPropertyTags(bool)
+                0x000000000008aa40                CBcmPropertyTags::CBcmPropertyTags(bool)
+                0x000000000008aa4c                CBcmPropertyTags::~CBcmPropertyTags()
+                0x000000000008aa4c                CBcmPropertyTags::~CBcmPropertyTags()
+                0x000000000008aa50                CBcmPropertyTags::GetTags(void*, unsigned int)
+                0x000000000008aba0                CBcmPropertyTags::GetTag(unsigned int, void*, unsigned int, unsigned int)
+ .text          0x000000000008aca0      0x2ac ../../lib/libcircle.a(debug.o)
+                0x000000000008aca0                DebugStackTrace(unsigned long const*, char const*)
+                0x000000000008ad44                DebugHexDump(void const*, unsigned int, char const*, unsigned int)
+ *fill*         0x000000000008af4c       0x34 
+ .text          0x000000000008af80       0x14 ../../lib/libcircle.a(delayloop.o)
+                0x000000000008af80                DelayLoop
+ *fill*         0x000000000008af94        0xc 
+ .text          0x000000000008afa0      0x360 ../../lib/libcircle.a(device.o)
+                0x000000000008afa0                CDevice::Read(void*, unsigned long)
+                0x000000000008afa0                CDevice::Write(void const*, unsigned long)
+                0x000000000008afa8                CDevice::Seek(unsigned long)
+                0x000000000008afb0                CDevice::GetSize() const
+                0x000000000008afc0                CDevice::IOCtl(unsigned long, void*)
+                0x000000000008afc8                CDevice::RemoveDevice()
+                0x000000000008afd0                CDevice::CDevice(CDevice*)
+                0x000000000008afd0                CDevice::CDevice(CDevice*)
+                0x000000000008b04c                CDevice::RegisterRemovedHandler(void (*)(CDevice*, void*), void*)
+                0x000000000008b0e4                CDevice::UnregisterRemovedHandler(void*)
+                0x000000000008b160                CDevice::SetProperty(CDevice::TProperty, char const*)
+                0x000000000008b1e0                CDevice::GetProperty(CDevice::TProperty) const
+                0x000000000008b220                CDevice::~CDevice()
+                0x000000000008b220                CDevice::~CDevice()
+                0x000000000008b2e0                CDevice::~CDevice()
+ .text          0x000000000008b300     0x12a4 ../../lib/libcircle.a(dmachannel.o)
+                0x000000000008b300                CDMAChannel::CDMAChannel(unsigned int, CInterruptSystem*)
+                0x000000000008b300                CDMAChannel::CDMAChannel(unsigned int, CInterruptSystem*)
+                0x000000000008b484                CDMAChannel::~CDMAChannel()
+                0x000000000008b484                CDMAChannel::~CDMAChannel()
+                0x000000000008b5e0                CDMAChannel::SetupMemCopy(void*, void const*, unsigned long, unsigned int, bool)
+                0x000000000008b7d0                CDMAChannel::SetupIORead(void*, unsigned long, unsigned long, TDREQ)
+                0x000000000008b980                CDMAChannel::SetupIOWrite(unsigned long, void const*, unsigned long, TDREQ)
+                0x000000000008bb2c                CDMAChannel::SetupCyclicIOWrite(unsigned long, void const**, unsigned int, unsigned long, TDREQ)
+                0x000000000008bde0                CDMAChannel::SetupMemCopy2D(void*, void const*, unsigned long, unsigned int, unsigned long, unsigned int)
+                0x000000000008c000                CDMAChannel::SetCompletionRoutine(void (*)(unsigned int, unsigned int, bool, void*), void*)
+                0x000000000008c0c0                CDMAChannel::Start()
+                0x000000000008c260                CDMAChannel::Wait()
+                0x000000000008c320                CDMAChannel::GetStatus()
+                0x000000000008c390                CDMAChannel::Cancel()
+                0x000000000008c3e4                CDMAChannel::InterruptHandler()
+                0x000000000008c580                CDMAChannel::InterruptStub(void*)
+ *fill*         0x000000000008c5a4       0x1c 
+ .text          0x000000000008c5c0      0x9f4 ../../lib/libcircle.a(logger.o)
+                0x000000000008c5c0                CLogger::CLogger(unsigned int, CTimer*, bool)
+                0x000000000008c5c0                CLogger::CLogger(unsigned int, CTimer*, bool)
+                0x000000000008c620                CLogger::~CLogger()
+                0x000000000008c620                CLogger::~CLogger()
+                0x000000000008c6a4                CLogger::SetNewTarget(CDevice*)
+                0x000000000008c6ac                CLogger::GetTarget() const
+                0x000000000008c6c0                CLogger::Get()
+                0x000000000008c728                CLogger::Write(char const*)
+                0x000000000008c820                CLogger::WriteNoAlloc(char const*, TLogSeverity, char const*)
+                0x000000000008c920                CLogger::Read(void*, unsigned int, bool)
+                0x000000000008c9ec                CLogger::WriteEvent(char const*, TLogSeverity, char const*)
+                0x000000000008cb50                CLogger::ReadEvent(TLogSeverity*, char*, char*, long*, unsigned int*, int*)
+                0x000000000008cc80                CLogger::RegisterEventNotificationHandler(void (*)())
+                0x000000000008cc88                CLogger::RegisterPanicHandler(void (*)())
+                0x000000000008cc90                CLogger::WriteV(char const*, TLogSeverity, char const*, std::__va_list)
+                0x000000000008ce40                CLogger::Write(char const*, TLogSeverity, char const*, ...)
+                0x000000000008cea0                CLogger::Initialize(CDevice*)
+ *fill*         0x000000000008cfb4        0xc 
+ .text          0x000000000008cfc0      0x478 ../../lib/libcircle.a(ptrlist.o)
+                0x000000000008cfc0                CPtrList::CPtrList()
+                0x000000000008cfc0                CPtrList::CPtrList()
+                0x000000000008cfc8                CPtrList::~CPtrList()
+                0x000000000008cfc8                CPtrList::~CPtrList()
+                0x000000000008d000                CPtrList::GetFirst() const
+                0x000000000008d008                CPtrList::GetNext(TPtrListElement*) const
+                0x000000000008d064                CPtrList::GetPtr(TPtrListElement*)
+                0x000000000008d0c0                CPtrList::InsertBefore(TPtrListElement*, void*)
+                0x000000000008d1c0                CPtrList::InsertAfter(TPtrListElement*, void*)
+                0x000000000008d2c0                CPtrList::Remove(TPtrListElement*)
+                0x000000000008d3e0                CPtrList::Find(void*) const
+ *fill*         0x000000000008d438        0x8 
+ .text          0x000000000008d440     0x1fb0 ../../lib/libcircle.a(terminal.o)
+                0x000000000008d440                CTerminalDevice::~CTerminalDevice()
+                0x000000000008d440                CTerminalDevice::~CTerminalDevice()
+                0x000000000008d4ac                CTerminalDevice::~CTerminalDevice()
+                0x000000000008d6c8                CTerminalDevice::CTerminalDevice(CDisplay*, unsigned int, TFont const&, CCharGenerator::TFontFlags)
+                0x000000000008d6c8                CTerminalDevice::CTerminalDevice(CDisplay*, unsigned int, TFont const&, CCharGenerator::TFontFlags)
+                0x000000000008d764                CTerminalDevice::GetWidth() const
+                0x000000000008d76c                CTerminalDevice::GetHeight() const
+                0x000000000008d780                CTerminalDevice::GetColumns() const
+                0x000000000008d790                CTerminalDevice::GetRows() const
+                0x000000000008d7a0                CTerminalDevice::GetDisplay()
+                0x000000000008d7a8                CTerminalDevice::SetPixel(unsigned int, unsigned int, CDisplay::TColor)
+                0x000000000008d890                CTerminalDevice::SetPixel(unsigned int, unsigned int, unsigned int)
+                0x000000000008d940                CTerminalDevice::GetPixel(unsigned int, unsigned int)
+                0x000000000008d9e8                CTerminalDevice::SetCursorBlock(bool)
+                0x000000000008d9f0                CTerminalDevice::Update(unsigned int)
+                0x000000000008dae8                CTerminalDevice::CarriageReturn()
+                0x000000000008daf0                CTerminalDevice::CursorHome()
+                0x000000000008db00                CTerminalDevice::CursorLeft()
+                0x000000000008db48                CTerminalDevice::CursorMove(unsigned int, unsigned int)
+                0x000000000008db90                CTerminalDevice::CursorUp()
+                0x000000000008dbb0                CTerminalDevice::DeleteChars(unsigned int)
+                0x000000000008dbc0                CTerminalDevice::DeleteLines(unsigned int)
+                0x000000000008dbc4                CTerminalDevice::GetTextBackgroundColor()
+                0x000000000008dbe0                CTerminalDevice::GetTextColor()
+                0x000000000008dc00                CTerminalDevice::InsertLines(unsigned int)
+                0x000000000008dc04                CTerminalDevice::InsertMode(bool)
+                0x000000000008dc0c                CTerminalDevice::ReverseScroll()
+                0x000000000008dc10                CTerminalDevice::SetAutoPageMode(bool)
+                0x000000000008dc20                CTerminalDevice::SetCursorMode(bool)
+                0x000000000008dc28                CTerminalDevice::SetScrollRegion(unsigned int, unsigned int)
+                0x000000000008dc6c                CTerminalDevice::SetStandoutMode(unsigned int)
+                0x000000000008dfac                CTerminalDevice::Scroll()
+                0x000000000008e1d0                CTerminalDevice::CursorDown()
+                0x000000000008e22c                CTerminalDevice::NewLine()
+                0x000000000008e28c                CTerminalDevice::CursorRight()
+                0x000000000008e308                CTerminalDevice::Tabulator()
+                0x000000000008e390                CTerminalDevice::DisplayChar(char, unsigned int, unsigned int, unsigned int)
+                0x000000000008e544                CTerminalDevice::DisplayChar(char)
+                0x000000000008e600                CTerminalDevice::EraseChar(unsigned int, unsigned int)
+                0x000000000008e700                CTerminalDevice::ClearLineEnd()
+                0x000000000008e960                CTerminalDevice::ClearDisplayEnd()
+                0x000000000008eacc                CTerminalDevice::Initialize()
+                0x000000000008ec68                CTerminalDevice::Write(char)
+                0x000000000008f270                CTerminalDevice::Write(void const*, unsigned long)
+                0x000000000008f384                CTerminalDevice::EraseChars(unsigned int)
+                0x000000000008f3e0                CTerminalDevice::InvertCursor()
+ *fill*         0x000000000008f3f0       0x10 
+ .text          0x000000000008f400      0x1c4 ../../lib/libcircle.a(pageallocator.o)
+                0x000000000008f400                CPageAllocator::CPageAllocator()
+                0x000000000008f400                CPageAllocator::CPageAllocator()
+                0x000000000008f420                CPageAllocator::~CPageAllocator()
+                0x000000000008f420                CPageAllocator::~CPageAllocator()
+                0x000000000008f424                CPageAllocator::Setup(unsigned long, unsigned long)
+                0x000000000008f480                CPageAllocator::GetFreeSpace() const
+                0x000000000008f48c                CPageAllocator::Allocate()
+                0x000000000008f550                CPageAllocator::Free(void*)
+ *fill*         0x000000000008f5c4      0x23c 
+ .text          0x000000000008f800      0xad8 ../../lib/libcircle.a(exceptionstub64.o)
+                0x000000000008f800                VectorTable
+                0x000000000008ff84                UnexpectedStub
+                0x000000000008ffbc                SynchronousStub
+                0x000000000008fff4                SErrorStub
+                0x000000000009002c                IRQStub
+                0x000000000009015c                FIQStub
+                0x0000000000090288                SMCStub
+ *fill*         0x00000000000902d8        0x8 
+ .text          0x00000000000902e0     0x14e4 ../../lib/libcircle.a(bcmpciehostbridge.o)
+                0x00000000000902e0                CBcmPCIeHostBridge::InterruptHandler(void*)
+                0x00000000000903b0                CBcmPCIeHostBridge::CBcmPCIeHostBridge(unsigned int, CInterruptSystem*)
+                0x00000000000903b0                CBcmPCIeHostBridge::CBcmPCIeHostBridge(unsigned int, CInterruptSystem*)
+                0x00000000000903e0                CBcmPCIeHostBridge::~CBcmPCIeHostBridge()
+                0x00000000000903e0                CBcmPCIeHostBridge::~CBcmPCIeHostBridge()
+                0x00000000000903e4                CBcmPCIeHostBridge::DumpStatus(unsigned int, unsigned int)
+                0x00000000000904f0                CBcmPCIeHostBridge::enable_bridge()
+                0x00000000000905c0                CBcmPCIeHostBridge::enable_device(unsigned int, unsigned int, unsigned int)
+                0x0000000000090764                CBcmPCIeHostBridge::EnableDevice(unsigned int, unsigned int, unsigned int)
+                0x0000000000090780                CBcmPCIeHostBridge::pcie_set_pci_ranges()
+                0x00000000000907e4                CBcmPCIeHostBridge::pcie_set_dma_ranges()
+                0x0000000000090860                CBcmPCIeHostBridge::pcie_set_outbound_win(unsigned int, unsigned long, unsigned long, unsigned long)
+                0x0000000000090920                CBcmPCIeHostBridge::pcie_map_conf(unsigned int, unsigned int, int)
+                0x0000000000090980                CBcmPCIeHostBridge::find_pci_capability(unsigned long, unsigned char)
+                0x0000000000090a0c                CBcmPCIeHostBridge::pcie_bridge_sw_init_set(unsigned int)
+                0x0000000000090a60                CBcmPCIeHostBridge::pcie_perst_set(unsigned int)
+                0x0000000000090a88                CBcmPCIeHostBridge::pcie_link_up()
+                0x0000000000090aac                CBcmPCIeHostBridge::pcie_rc_mode()
+                0x0000000000090ac0                CBcmPCIeHostBridge::msi_set_regs(TPCIeMSIData*)
+                0x0000000000090b40                CBcmPCIeHostBridge::pcie_enable_msi(void (*)(unsigned int, void*), void*)
+                0x0000000000090c24                CBcmPCIeHostBridge::cfg_index(int, int, int)
+                0x0000000000090c40                CBcmPCIeHostBridge::set_gen(unsigned long, int)
+                0x0000000000090c6c                CBcmPCIeHostBridge::link_speed_to_str(int)
+                0x0000000000090ca0                CBcmPCIeHostBridge::encode_ibar_size(unsigned long)
+                0x0000000000090d00                CBcmPCIeHostBridge::rd_fld(unsigned long, unsigned int, int)
+                0x0000000000090d10                CBcmPCIeHostBridge::wr_fld(unsigned long, unsigned int, int, unsigned int)
+                0x0000000000090d2c                CBcmPCIeHostBridge::wr_fld_rb(unsigned long, unsigned int, int, unsigned int)
+                0x0000000000090d4c                CBcmPCIeHostBridge::usleep_range(unsigned int, unsigned int)
+                0x0000000000090d60                CBcmPCIeHostBridge::msleep(unsigned int)
+                0x0000000000090d68                CBcmPCIeHostBridge::ilog2(unsigned long)
+                0x0000000000090da0                CBcmPCIeHostBridge::pcie_set_tc_qos()
+                0x0000000000090e40                CBcmPCIeHostBridge::pcie_config_clkreq()
+                0x0000000000090e64                CBcmPCIeHostBridge::pcie_mdio_read(unsigned char, unsigned char, unsigned int*)
+                0x0000000000090f24                CBcmPCIeHostBridge::pcie_mdio_write(unsigned char, unsigned char, unsigned short)
+                0x0000000000090fe0                CBcmPCIeHostBridge::pcie_munge_pll()
+                0x00000000000910a0                CBcmPCIeHostBridge::pcie_mdio_form_pkt(int, int, int)
+                0x00000000000910ac                CBcmPCIeHostBridge::reset_assert(unsigned long)
+                0x00000000000910e0                CBcmPCIeHostBridge::reset_deassert(unsigned long)
+                0x0000000000091128                CBcmPCIeHostBridge::rescal_reset_deassert()
+                0x0000000000091200                CBcmPCIeHostBridge::pcie_setup()
+                0x00000000000916e8                CBcmPCIeHostBridge::pcie_probe()
+                0x0000000000091720                CBcmPCIeHostBridge::Initialize()
+ *fill*         0x00000000000917c4       0x1c 
+ .text          0x00000000000917e0     0x1004 ../../lib/libcircle.a(dma4channel.o)
+                0x00000000000917e0                CDMA4Channel::CDMA4Channel(unsigned int, CInterruptSystem*)
+                0x00000000000917e0                CDMA4Channel::CDMA4Channel(unsigned int, CInterruptSystem*)
+                0x00000000000918c0                CDMA4Channel::~CDMA4Channel()
+                0x00000000000918c0                CDMA4Channel::~CDMA4Channel()
+                0x00000000000919a0                CDMA4Channel::SetupMemCopy(void*, void const*, unsigned long, unsigned int, bool)
+                0x0000000000091b6c                CDMA4Channel::SetupIORead(void*, unsigned long, unsigned long, TDREQ)
+                0x0000000000091ccc                CDMA4Channel::SetupIOWrite(unsigned long, void const*, unsigned long, TDREQ)
+                0x0000000000091e30                CDMA4Channel::SetupCyclicIOWrite(unsigned long, void const**, unsigned int, unsigned long, TDREQ)
+                0x0000000000092060                CDMA4Channel::SetupMemCopy2D(void*, void const*, unsigned long, unsigned int, unsigned long, unsigned int)
+                0x0000000000092264                CDMA4Channel::SetCompletionRoutine(void (*)(unsigned int, unsigned int, bool, void*), void*)
+                0x000000000009232c                CDMA4Channel::Start()
+                0x00000000000924a4                CDMA4Channel::Wait()
+                0x0000000000092564                CDMA4Channel::GetStatus()
+                0x00000000000925e0                CDMA4Channel::Cancel()
+                0x0000000000092644                CDMA4Channel::InterruptHandler()
+                0x00000000000927c0                CDMA4Channel::InterruptStub(void*)
+ *fill*         0x00000000000927e4       0x1c 
+ .text          0x0000000000092800      0x3cc ../../lib/libcircle.a(display.o)
+                0x0000000000092800                CDisplay::GetParent() const
+                0x0000000000092808                CDisplay::GetOffsetX() const
+                0x0000000000092808                CDisplay::GetOffsetY() const
+                0x0000000000092810                CDisplay::CDisplay(CDisplay::TColorModel)
+                0x0000000000092810                CDisplay::CDisplay(CDisplay::TColorModel)
+                0x0000000000092824                CDisplay::GetColorModel() const
+                0x000000000009282c                CDisplay::GetColor(CDisplay::TColor) const
+                0x00000000000929c0                CDisplay::GetColor(unsigned int) const
+ *fill*         0x0000000000092bcc       0x14 
+ .text          0x0000000000092be0      0x1c4 ../../lib/libcircle.a(bcmmailbox.o)
+                0x0000000000092be0                CBcmMailBox::CBcmMailBox(unsigned int, bool)
+                0x0000000000092be0                CBcmMailBox::CBcmMailBox(unsigned int, bool)
+                0x0000000000092bec                CBcmMailBox::~CBcmMailBox()
+                0x0000000000092bec                CBcmMailBox::~CBcmMailBox()
+                0x0000000000092bf0                CBcmMailBox::Flush()
+                0x0000000000092c30                CBcmMailBox::Read()
+                0x0000000000092c64                CBcmMailBox::Write(unsigned int)
+                0x0000000000092cc0                CBcmMailBox::WriteRead(unsigned int)
+ *fill*         0x0000000000092da4       0x1c 
+ .text.startup  0x0000000000092dc0        0xc ../../lib/libcircle.a(bcmmailbox.o)
+ *fill*         0x0000000000092dcc       0x14 
+ .text          0x0000000000092de0      0x128 ../../lib/libcircle.a(chargenerator.o)
+                0x0000000000092de0                CCharGenerator::CCharGenerator(TFont const&, CCharGenerator::TFontFlags)
+                0x0000000000092de0                CCharGenerator::CCharGenerator(TFont const&, CCharGenerator::TFontFlags)
+                0x0000000000092e28                CCharGenerator::GetPixelLine(char, unsigned int) const
+ *fill*         0x0000000000092f08       0x18 
+ .text          0x0000000000092f20      0x37c ../../lib/libcircle.a(exceptionhandler64.o)
+                0x0000000000092f20                CExceptionHandler::~CExceptionHandler()
+                0x0000000000092f20                CExceptionHandler::~CExceptionHandler()
+                0x0000000000092f2c                CExceptionHandler::~CExceptionHandler()
+                0x0000000000092f40                CExceptionHandler::Throw(unsigned int, TAbortFrame*)
+                0x00000000000931a4                CExceptionHandler::CExceptionHandler()
+                0x00000000000931a4                CExceptionHandler::CExceptionHandler()
+                0x00000000000931e4                CExceptionHandler::Get()
+                0x0000000000093220                ExceptionHandler
+                0x000000000009329c                _etext = .
+
+.iplt           0x000000000009329c        0x0
+ .iplt          0x000000000009329c        0x0 main.o
+
+.rodata         0x00000000000932a0     0x36df
+ *(.rodata*)
+ .rodata.str1.8
+                0x00000000000932a0      0xa55 ../../lib/libcircle.a(devicenameservice.o)
+                                         0xe2 (size before relaxing)
+ .rodata.str1.8
+                0x0000000000093cf5        0x0 ../../lib/libcircle.a(koptions.o)
+                                        0x10a (size before relaxing)
+ *fill*         0x0000000000093cf5        0x3 
+ .rodata        0x0000000000093cf8        0x2 ../../lib/libcircle.a(koptions.o)
+ *fill*         0x0000000000093cfa        0x6 
+ .rodata        0x0000000000093d00      0x9bc ../../lib/libcircle.a(machineinfo.o)
+ *fill*         0x00000000000946bc        0x4 
+ .rodata._ZTV13CScreenDevice
+                0x00000000000946c0       0x50 ../../lib/libcircle.a(screen.o)
+                0x00000000000946c0                vtable for CScreenDevice
+ .rodata        0x0000000000094710       0x10 ../../lib/libcircle.a(screen.o)
+ .rodata.str1.8
+                0x0000000000094720        0x0 ../../lib/libcircle.a(string.o)
+                                         0x23 (size before relaxing)
+ .rodata._ZTV7CString
+                0x0000000000094720       0x20 ../../lib/libcircle.a(string.o)
+                0x0000000000094720                vtable for CString
+ .rodata.str1.8
+                0x0000000000094740        0x0 ../../lib/libcircle.a(sysinit.o)
+                                          0x3 (size before relaxing)
+ .rodata.str1.8
+                0x0000000000094740        0x0 ../../lib/libcircle.a(timer.o)
+                                        0x23c (size before relaxing)
+ .rodata        0x0000000000094740       0x36 ../../lib/libcircle.a(timer.o)
+                0x0000000000094740                CTimer::s_nDaysOfMonth
+ *fill*         0x0000000000094776        0x2 
+ .rodata        0x0000000000094778       0x2b ../../lib/libcircle.a(new.o)
+ .rodata.str1.8
+                0x00000000000947a3        0x0 ../../lib/libcircle.a(heapallocator.o)
+                                         0xb7 (size before relaxing)
+ *fill*         0x00000000000947a3        0xd 
+ .rodata        0x00000000000947b0      0xe10 ../../lib/libcircle.a(font8x16.o)
+                0x00000000000947b0                Font8x16
+ .rodata        0x00000000000955c0       0x84 ../../lib/libcircle.a(memory64.o)
+ .rodata.str1.8
+                0x0000000000095644        0x0 ../../lib/libcircle.a(synchronize64.o)
+                                         0xbd (size before relaxing)
+ .rodata.str1.8
+                0x0000000000095644        0x0 ../../lib/libcircle.a(translationtable64.o)
+                                         0x34 (size before relaxing)
+ *fill*         0x0000000000095644        0x4 
+ .rodata        0x0000000000095648      0x19b ../../lib/libcircle.a(interruptgic.o)
+ .rodata.str1.8
+                0x00000000000957e3        0x0 ../../lib/libcircle.a(devicetreeblob.o)
+                                         0xf9 (size before relaxing)
+ *fill*         0x00000000000957e3        0x5 
+ .rodata        0x00000000000957e8        0x4 ../../lib/libcircle.a(devicetreeblob.o)
+ *fill*         0x00000000000957ec        0x4 
+ .rodata        0x00000000000957f0      0x19d ../../lib/libcircle.a(southbridge.o)
+ *fill*         0x000000000009598d        0x3 
+ .rodata        0x0000000000095990       0x41 ../../lib/libcircle.a(alloc.o)
+ .rodata.str1.8
+                0x00000000000959d1        0x0 ../../lib/libcircle.a(assert.o)
+                                         0x1d (size before relaxing)
+ *fill*         0x00000000000959d1        0x7 
+ .rodata._ZTV15CBcmFrameBuffer
+                0x00000000000959d8       0x60 ../../lib/libcircle.a(bcmframebuffer.o)
+                0x00000000000959d8                vtable for CBcmFrameBuffer
+ .rodata        0x0000000000095a38       0x70 ../../lib/libcircle.a(bcmframebuffer.o)
+                0x0000000000095a38                CBcmFrameBuffer::s_InitTags
+ .rodata        0x0000000000095aa8       0xa8 ../../lib/libcircle.a(bcmpropertytags.o)
+ .rodata.str1.8
+                0x0000000000095b50        0x0 ../../lib/libcircle.a(debug.o)
+                                         0x5c (size before relaxing)
+ .rodata        0x0000000000095b50        0x6 ../../lib/libcircle.a(debug.o)
+ .rodata.str1.8
+                0x0000000000095b56        0x0 ../../lib/libcircle.a(device.o)
+                                         0x8e (size before relaxing)
+ *fill*         0x0000000000095b56        0x2 
+ .rodata._ZTV7CDevice
+                0x0000000000095b58       0x50 ../../lib/libcircle.a(device.o)
+                0x0000000000095b58                vtable for CDevice
+ .rodata        0x0000000000095ba8      0x4bb ../../lib/libcircle.a(dmachannel.o)
+ *fill*         0x0000000000096063        0x5 
+ .rodata        0x0000000000096068       0xac ../../lib/libcircle.a(logger.o)
+ .rodata.str1.8
+                0x0000000000096114        0x0 ../../lib/libcircle.a(ptrlist.o)
+                                        0x192 (size before relaxing)
+ *fill*         0x0000000000096114        0x4 
+ .rodata        0x0000000000096118       0xdc ../../lib/libcircle.a(terminal.o)
+ *fill*         0x00000000000961f4        0x4 
+ .rodata._ZTV15CTerminalDevice
+                0x00000000000961f8       0x50 ../../lib/libcircle.a(terminal.o)
+                0x00000000000961f8                vtable for CTerminalDevice
+ .rodata        0x0000000000096248       0x4c ../../lib/libcircle.a(pageallocator.o)
+ *fill*         0x0000000000096294        0x4 
+ .rodata        0x0000000000096298      0x314 ../../lib/libcircle.a(bcmpciehostbridge.o)
+ *fill*         0x00000000000965ac        0x4 
+ .rodata        0x00000000000965b0      0x32b ../../lib/libcircle.a(dma4channel.o)
+ *fill*         0x00000000000968db        0x1 
+ .rodata        0x00000000000968dc        0xf ../../lib/libcircle.a(display.o)
+ *fill*         0x00000000000968eb        0x5 
+ .rodata._ZTV8CDisplay
+                0x00000000000968f0       0x60 ../../lib/libcircle.a(display.o)
+                0x00000000000968f0                vtable for CDisplay
+ .rodata.str1.8
+                0x0000000000096950        0x0 ../../lib/libcircle.a(bcmmailbox.o)
+                                         0x23 (size before relaxing)
+ .rodata.str1.8
+                0x0000000000096950        0x0 ../../lib/libcircle.a(exceptionhandler64.o)
+                                         0xd5 (size before relaxing)
+ .rodata._ZTV17CExceptionHandler
+                0x0000000000096950       0x28 ../../lib/libcircle.a(exceptionhandler64.o)
+                0x0000000000096950                vtable for CExceptionHandler
+ .rodata        0x0000000000096978        0x7 ../../lib/libcircle.a(exceptionhandler64.o)
+
+.rela.dyn       0x0000000000096980        0x0
+ .rela.iplt     0x0000000000096980        0x0 main.o
+ .rela.text     0x0000000000096980        0x0 main.o
+ .rela.rodata._ZTV8CDisplay
+                0x0000000000096980        0x0 main.o
+
+.init_array     0x0000000000096980        0x8
+                0x0000000000096980                __init_start = .
+ *(.init_array*)
+ .init_array    0x0000000000096980        0x8 ../../lib/libcircle.a(bcmmailbox.o)
+                0x0000000000096988                __init_end = .
+
+.ARM.exidx      0x0000000000096988        0x0
+                0x0000000000096988                __exidx_start = .
+ *(.ARM.exidx*)
+                0x0000000000096988                __exidx_end = .
+
+.eh_frame_hdr   0x0000000000096988        0x0
+                0x0000000000096988                __eh_frame_hdr_start = .
+ *(.eh_frame_hdr)
+ *(.eh_frame_hdr.*)
+                0x0000000000096988                __eh_frame_hdr_end = .
+
+.eh_frame       0x0000000000096988        0x0
+                0x0000000000096988                __eh_frame_start = .
+ *(.eh_frame)
+ *(.eh_frame.*)
+                0x0000000000096988                __eh_frame_end = .
+
+.data           0x0000000000096990       0xf8
+ *(.data*)
+ .data          0x0000000000096990        0x0 main.o
+ .data          0x0000000000096990        0x0 kernel.o
+ .data          0x0000000000096990        0x0 ../../lib/libcircle.a(actled.o)
+ .data          0x0000000000096990       0x36 ../../lib/libcircle.a(devicenameservice.o)
+ .data          0x00000000000969c6        0x0 ../../lib/libcircle.a(koptions.o)
+ .data          0x00000000000969c6        0x0 ../../lib/libcircle.a(machineinfo.o)
+ .data          0x00000000000969c6        0x0 ../../lib/libcircle.a(screen.o)
+ .data          0x00000000000969c6        0x0 ../../lib/libcircle.a(string.o)
+ .data          0x00000000000969c6        0x0 ../../lib/libcircle.a(sysinit.o)
+ *fill*         0x00000000000969c6        0xa 
+ .data          0x00000000000969d0       0x60 ../../lib/libcircle.a(timer.o)
+                0x00000000000969d0                CTimer::s_pMonthName
+ .data          0x0000000000096a30        0x0 ../../lib/libcircle.a(util.o)
+ .data          0x0000000000096a30        0x0 ../../lib/libcircle.a(util_fast.o)
+ .data          0x0000000000096a30        0x0 ../../lib/libcircle.a(chainboot.o)
+ .data          0x0000000000096a30        0x0 ../../lib/libcircle.a(new.o)
+ .data          0x0000000000096a30       0x1c ../../lib/libcircle.a(heapallocator.o)
+                0x0000000000096a30                CHeapAllocator::s_nBucketSize
+ .data          0x0000000000096a4c        0x0 ../../lib/libcircle.a(font8x16.o)
+ .data          0x0000000000096a4c        0x0 ../../lib/libcircle.a(memory64.o)
+ .data          0x0000000000096a4c        0x0 ../../lib/libcircle.a(startup64.o)
+ .data          0x0000000000096a4c        0x0 ../../lib/libcircle.a(synchronize64.o)
+ .data          0x0000000000096a4c        0x0 ../../lib/libcircle.a(translationtable64.o)
+ .data          0x0000000000096a4c        0x0 ../../lib/libcircle.a(interruptgic.o)
+ .data          0x0000000000096a4c        0x0 ../../lib/libcircle.a(devicetreeblob.o)
+ .data          0x0000000000096a4c        0x0 ../../lib/libcircle.a(southbridge.o)
+ .data          0x0000000000096a4c        0x0 ../../lib/libcircle.a(alloc.o)
+ .data          0x0000000000096a4c        0x0 ../../lib/libcircle.a(assert.o)
+ .data          0x0000000000096a4c        0x4 ../../lib/libcircle.a(bcmframebuffer.o)
+                0x0000000000096a4c                CBcmFrameBuffer::s_nCurrentDisplay
+ .data          0x0000000000096a50        0x0 ../../lib/libcircle.a(bcmpropertytags.o)
+ .data          0x0000000000096a50        0x0 ../../lib/libcircle.a(debug.o)
+ .data          0x0000000000096a50        0x0 ../../lib/libcircle.a(delayloop.o)
+ .data          0x0000000000096a50        0x0 ../../lib/libcircle.a(device.o)
+ .data          0x0000000000096a50        0x0 ../../lib/libcircle.a(dmachannel.o)
+ .data          0x0000000000096a50        0x0 ../../lib/libcircle.a(logger.o)
+ .data          0x0000000000096a50        0x0 ../../lib/libcircle.a(ptrlist.o)
+ .data          0x0000000000096a50        0x0 ../../lib/libcircle.a(terminal.o)
+ .data          0x0000000000096a50        0x0 ../../lib/libcircle.a(pageallocator.o)
+ .data          0x0000000000096a50       0x20 ../../lib/libcircle.a(exceptionstub64.o)
+                0x0000000000096a50                FIQData
+                0x0000000000096a68                IRQReturnAddress
+ .data          0x0000000000096a70        0x0 ../../lib/libcircle.a(bcmpciehostbridge.o)
+ .data          0x0000000000096a70        0x0 ../../lib/libcircle.a(dma4channel.o)
+ .data          0x0000000000096a70        0x0 ../../lib/libcircle.a(display.o)
+ .data          0x0000000000096a70        0x0 ../../lib/libcircle.a(bcmmailbox.o)
+ .data          0x0000000000096a70        0x0 ../../lib/libcircle.a(chargenerator.o)
+ .data          0x0000000000096a70       0x18 ../../lib/libcircle.a(exceptionhandler64.o)
+                0x0000000000096a70                CExceptionHandler::s_pExceptionName
+
+.igot.plt       0x0000000000096a88        0x0
+ .igot.plt      0x0000000000096a88        0x0 main.o
+
+.tdata          0x0000000000096a88        0x0
+                0x0000000000096a88                __tdata_start = .
+ *(.tdata .tdata.*)
+                0x0000000000096a88                __tdata_end = .
+
+.bss            0x0000000000096a90      0x1d0
+                0x0000000000096a90                __bss_start = .
+ *(.bss*)
+ .bss           0x0000000000096a90        0x0 main.o
+ .bss           0x0000000000096a90        0x0 kernel.o
+ .bss           0x0000000000096a90        0x8 ../../lib/libcircle.a(actled.o)
+                0x0000000000096a90                CActLED::s_pThis
+ .bss           0x0000000000096a98        0x8 ../../lib/libcircle.a(devicenameservice.o)
+                0x0000000000096a98                CDeviceNameService::s_This
+ .bss           0x0000000000096aa0        0x8 ../../lib/libcircle.a(koptions.o)
+                0x0000000000096aa0                CKernelOptions::s_pThis
+ .bss           0x0000000000096aa8        0x8 ../../lib/libcircle.a(machineinfo.o)
+                0x0000000000096aa8                CMachineInfo::s_pThis
+ .bss           0x0000000000096ab0        0x0 ../../lib/libcircle.a(screen.o)
+ .bss           0x0000000000096ab0        0x0 ../../lib/libcircle.a(string.o)
+ .bss           0x0000000000096ab0       0x20 ../../lib/libcircle.a(sysinit.o)
+                0x0000000000096ab8                circle_version_string
+                0x0000000000096ac8                __dso_handle
+ .bss           0x0000000000096ad0        0x8 ../../lib/libcircle.a(timer.o)
+                0x0000000000096ad0                CTimer::s_pThis
+ .bss           0x0000000000096ad8        0x0 ../../lib/libcircle.a(util.o)
+ .bss           0x0000000000096ad8        0x0 ../../lib/libcircle.a(util_fast.o)
+ .bss           0x0000000000096ad8       0x10 ../../lib/libcircle.a(chainboot.o)
+ .bss           0x0000000000096ae8        0x0 ../../lib/libcircle.a(new.o)
+ .bss           0x0000000000096ae8        0x0 ../../lib/libcircle.a(heapallocator.o)
+ .bss           0x0000000000096ae8        0x0 ../../lib/libcircle.a(font8x16.o)
+ .bss           0x0000000000096ae8        0x8 ../../lib/libcircle.a(memory64.o)
+                0x0000000000096ae8                CMemorySystem::s_pThis
+ .bss           0x0000000000096af0        0x0 ../../lib/libcircle.a(startup64.o)
+ .bss           0x0000000000096af0       0xb0 ../../lib/libcircle.a(synchronize64.o)
+ .bss           0x0000000000096ba0        0x0 ../../lib/libcircle.a(translationtable64.o)
+ .bss           0x0000000000096ba0        0x8 ../../lib/libcircle.a(interruptgic.o)
+                0x0000000000096ba0                CInterruptSystem::s_pThis
+ .bss           0x0000000000096ba8        0x0 ../../lib/libcircle.a(devicetreeblob.o)
+ .bss           0x0000000000096ba8        0x9 ../../lib/libcircle.a(southbridge.o)
+                0x0000000000096ba8                CSouthbridge::s_pThis
+                0x0000000000096bb0                CSouthbridge::s_bIsInitialized
+ .bss           0x0000000000096bb1        0x0 ../../lib/libcircle.a(alloc.o)
+ .bss           0x0000000000096bb1        0x0 ../../lib/libcircle.a(assert.o)
+ *fill*         0x0000000000096bb1        0x3 
+ .bss           0x0000000000096bb4        0x4 ../../lib/libcircle.a(bcmframebuffer.o)
+                0x0000000000096bb4                CBcmFrameBuffer::s_nDisplays
+ .bss           0x0000000000096bb8        0x0 ../../lib/libcircle.a(bcmpropertytags.o)
+ .bss           0x0000000000096bb8        0x0 ../../lib/libcircle.a(debug.o)
+ .bss           0x0000000000096bb8        0x0 ../../lib/libcircle.a(delayloop.o)
+ .bss           0x0000000000096bb8        0x0 ../../lib/libcircle.a(device.o)
+ .bss           0x0000000000096bb8        0x0 ../../lib/libcircle.a(dmachannel.o)
+ .bss           0x0000000000096bb8        0x8 ../../lib/libcircle.a(logger.o)
+                0x0000000000096bb8                CLogger::s_pThis
+ .bss           0x0000000000096bc0        0x0 ../../lib/libcircle.a(ptrlist.o)
+ .bss           0x0000000000096bc0        0x0 ../../lib/libcircle.a(terminal.o)
+ .bss           0x0000000000096bc0        0x0 ../../lib/libcircle.a(pageallocator.o)
+ .bss           0x0000000000096bc0       0x80 ../../lib/libcircle.a(exceptionstub64.o)
+ .bss           0x0000000000096c40       0x10 ../../lib/libcircle.a(bcmpciehostbridge.o)
+                0x0000000000096c40                CBcmPCIeHostBridge::s_nDMAAddress
+ .bss           0x0000000000096c50        0x0 ../../lib/libcircle.a(dma4channel.o)
+ .bss           0x0000000000096c50        0x0 ../../lib/libcircle.a(display.o)
+ .bss           0x0000000000096c50        0x4 ../../lib/libcircle.a(bcmmailbox.o)
+                0x0000000000096c50                CBcmMailBox::s_SpinLock
+ .bss           0x0000000000096c54        0x0 ../../lib/libcircle.a(chargenerator.o)
+ *fill*         0x0000000000096c54        0x4 
+ .bss           0x0000000000096c58        0x8 ../../lib/libcircle.a(exceptionhandler64.o)
+                0x0000000000096c58                CExceptionHandler::s_pThis
+ *(COMMON)
+                0x0000000000096c60                __bss_end = .
+
+.tbss           0x0000000000096c60        0x0
+                0x0000000000096c60                __tbss_start = .
+ *(.tbss .tbss.*)
+                0x0000000000096c60                __tbss_end = .
+                0x0000000000096c60                _end = .
+LOAD main.o
+LOAD kernel.o
+START GROUP
+LOAD ../../lib/libcircle.a
+LOAD /home/yeokiwi/arm-gnu-toolchain-15.2.rel1-x86_64-aarch64-none-elf/bin/../lib/gcc/aarch64-none-elf/15.2.1/libgcc.a
+LOAD /home/yeokiwi/arm-gnu-toolchain-15.2.rel1-x86_64-aarch64-none-elf/bin/../lib/gcc/aarch64-none-elf/15.2.1/../../../../aarch64-none-elf/lib/libm.a
+END GROUP
+OUTPUT(kernel_2712.elf elf64-littleaarch64)
+LOAD linker stubs
+
+.debug_info     0x0000000000000000    0x3ff6b
+ .debug_info    0x0000000000000000      0xb46 main.o
+ .debug_info    0x0000000000000b46     0x1cda kernel.o
+ .debug_info    0x0000000000002820     0x1720 ../../lib/libcircle.a(actled.o)
+ .debug_info    0x0000000000003f40     0x14f3 ../../lib/libcircle.a(devicenameservice.o)
+ .debug_info    0x0000000000005433     0x1c1b ../../lib/libcircle.a(koptions.o)
+ .debug_info    0x000000000000704e     0x2c43 ../../lib/libcircle.a(machineinfo.o)
+ .debug_info    0x0000000000009c91     0x15b0 ../../lib/libcircle.a(screen.o)
+ .debug_info    0x000000000000b241     0x34e7 ../../lib/libcircle.a(string.o)
+ .debug_info    0x000000000000e728     0x2ca3 ../../lib/libcircle.a(sysinit.o)
+ .debug_info    0x00000000000113cb     0x2ca8 ../../lib/libcircle.a(timer.o)
+ .debug_info    0x0000000000014073      0xb66 ../../lib/libcircle.a(util.o)
+ .debug_info    0x0000000000014bd9      0x288 ../../lib/libcircle.a(chainboot.o)
+ .debug_info    0x0000000000014e61     0x123e ../../lib/libcircle.a(new.o)
+ .debug_info    0x000000000001609f     0x1a10 ../../lib/libcircle.a(heapallocator.o)
+ .debug_info    0x0000000000017aaf       0xeb ../../lib/libcircle.a(font8x16.o)
+ .debug_info    0x0000000000017b9a     0x1a6d ../../lib/libcircle.a(memory64.o)
+ .debug_info    0x0000000000019607      0x616 ../../lib/libcircle.a(synchronize64.o)
+ .debug_info    0x0000000000019c1d      0x696 ../../lib/libcircle.a(translationtable64.o)
+ .debug_info    0x000000000001a2b3     0x2fff ../../lib/libcircle.a(interruptgic.o)
+ .debug_info    0x000000000001d2b2     0x1a26 ../../lib/libcircle.a(devicetreeblob.o)
+ .debug_info    0x000000000001ecd8     0x238c ../../lib/libcircle.a(southbridge.o)
+ .debug_info    0x0000000000021064      0xf93 ../../lib/libcircle.a(alloc.o)
+ .debug_info    0x0000000000021ff7      0xfb9 ../../lib/libcircle.a(assert.o)
+ .debug_info    0x0000000000022fb0     0x2ced ../../lib/libcircle.a(bcmframebuffer.o)
+ .debug_info    0x0000000000025c9d     0x106e ../../lib/libcircle.a(bcmpropertytags.o)
+ .debug_info    0x0000000000026d0b     0x12de ../../lib/libcircle.a(debug.o)
+ .debug_info    0x0000000000027fe9      0xeaa ../../lib/libcircle.a(device.o)
+ .debug_info    0x0000000000028e93     0x333f ../../lib/libcircle.a(dmachannel.o)
+ .debug_info    0x000000000002c1d2     0x29f5 ../../lib/libcircle.a(logger.o)
+ .debug_info    0x000000000002ebc7      0x8d5 ../../lib/libcircle.a(ptrlist.o)
+ .debug_info    0x000000000002f49c     0x4e61 ../../lib/libcircle.a(terminal.o)
+ .debug_info    0x00000000000342fd      0x5fd ../../lib/libcircle.a(pageallocator.o)
+ .debug_info    0x00000000000348fa     0x62e7 ../../lib/libcircle.a(bcmpciehostbridge.o)
+ .debug_info    0x000000000003abe1     0x2438 ../../lib/libcircle.a(dma4channel.o)
+ .debug_info    0x000000000003d019      0x5d0 ../../lib/libcircle.a(display.o)
+ .debug_info    0x000000000003d5e9     0x1144 ../../lib/libcircle.a(bcmmailbox.o)
+ .debug_info    0x000000000003e72d      0x48a ../../lib/libcircle.a(chargenerator.o)
+ .debug_info    0x000000000003ebb7     0x13b4 ../../lib/libcircle.a(exceptionhandler64.o)
+
+.debug_abbrev   0x0000000000000000     0x9f86
+ .debug_abbrev  0x0000000000000000      0x2a9 main.o
+ .debug_abbrev  0x00000000000002a9      0x44a kernel.o
+ .debug_abbrev  0x00000000000006f3      0x44c ../../lib/libcircle.a(actled.o)
+ .debug_abbrev  0x0000000000000b3f      0x427 ../../lib/libcircle.a(devicenameservice.o)
+ .debug_abbrev  0x0000000000000f66      0x4a0 ../../lib/libcircle.a(koptions.o)
+ .debug_abbrev  0x0000000000001406      0x61a ../../lib/libcircle.a(machineinfo.o)
+ .debug_abbrev  0x0000000000001a20      0x42b ../../lib/libcircle.a(screen.o)
+ .debug_abbrev  0x0000000000001e4b      0x4a6 ../../lib/libcircle.a(string.o)
+ .debug_abbrev  0x00000000000022f1      0x671 ../../lib/libcircle.a(sysinit.o)
+ .debug_abbrev  0x0000000000002962      0x650 ../../lib/libcircle.a(timer.o)
+ .debug_abbrev  0x0000000000002fb2      0x2d4 ../../lib/libcircle.a(util.o)
+ .debug_abbrev  0x0000000000003286      0x14b ../../lib/libcircle.a(chainboot.o)
+ .debug_abbrev  0x00000000000033d1      0x422 ../../lib/libcircle.a(new.o)
+ .debug_abbrev  0x00000000000037f3      0x509 ../../lib/libcircle.a(heapallocator.o)
+ .debug_abbrev  0x0000000000003cfc       0x9e ../../lib/libcircle.a(font8x16.o)
+ .debug_abbrev  0x0000000000003d9a      0x4df ../../lib/libcircle.a(memory64.o)
+ .debug_abbrev  0x0000000000004279      0x19a ../../lib/libcircle.a(synchronize64.o)
+ .debug_abbrev  0x0000000000004413      0x2f8 ../../lib/libcircle.a(translationtable64.o)
+ .debug_abbrev  0x000000000000470b      0x672 ../../lib/libcircle.a(interruptgic.o)
+ .debug_abbrev  0x0000000000004d7d      0x48e ../../lib/libcircle.a(devicetreeblob.o)
+ .debug_abbrev  0x000000000000520b      0x4d8 ../../lib/libcircle.a(southbridge.o)
+ .debug_abbrev  0x00000000000056e3      0x3a7 ../../lib/libcircle.a(alloc.o)
+ .debug_abbrev  0x0000000000005a8a      0x2f6 ../../lib/libcircle.a(assert.o)
+ .debug_abbrev  0x0000000000005d80      0x7a0 ../../lib/libcircle.a(bcmframebuffer.o)
+ .debug_abbrev  0x0000000000006520      0x3b3 ../../lib/libcircle.a(bcmpropertytags.o)
+ .debug_abbrev  0x00000000000068d3      0x372 ../../lib/libcircle.a(debug.o)
+ .debug_abbrev  0x0000000000006c45      0x3ec ../../lib/libcircle.a(device.o)
+ .debug_abbrev  0x0000000000007031      0x54a ../../lib/libcircle.a(dmachannel.o)
+ .debug_abbrev  0x000000000000757b      0x61d ../../lib/libcircle.a(logger.o)
+ .debug_abbrev  0x0000000000007b98      0x1f3 ../../lib/libcircle.a(ptrlist.o)
+ .debug_abbrev  0x0000000000007d8b      0x746 ../../lib/libcircle.a(terminal.o)
+ .debug_abbrev  0x00000000000084d1      0x285 ../../lib/libcircle.a(pageallocator.o)
+ .debug_abbrev  0x0000000000008756      0x5ed ../../lib/libcircle.a(bcmpciehostbridge.o)
+ .debug_abbrev  0x0000000000008d43      0x4ed ../../lib/libcircle.a(dma4channel.o)
+ .debug_abbrev  0x0000000000009230      0x2b6 ../../lib/libcircle.a(display.o)
+ .debug_abbrev  0x00000000000094e6      0x419 ../../lib/libcircle.a(bcmmailbox.o)
+ .debug_abbrev  0x00000000000098ff      0x1f0 ../../lib/libcircle.a(chargenerator.o)
+ .debug_abbrev  0x0000000000009aef      0x497 ../../lib/libcircle.a(exceptionhandler64.o)
+
+.debug_loclists
+                0x0000000000000000    0x1628c
+ .debug_loclists
+                0x0000000000000000       0x24 main.o
+ .debug_loclists
+                0x0000000000000024      0x104 kernel.o
+ .debug_loclists
+                0x0000000000000128      0x2b3 ../../lib/libcircle.a(actled.o)
+ .debug_loclists
+                0x00000000000003db      0x8ca ../../lib/libcircle.a(devicenameservice.o)
+ .debug_loclists
+                0x0000000000000ca5      0x64f ../../lib/libcircle.a(koptions.o)
+ .debug_loclists
+                0x00000000000012f4      0x986 ../../lib/libcircle.a(machineinfo.o)
+ .debug_loclists
+                0x0000000000001c7a      0x5fa ../../lib/libcircle.a(screen.o)
+ .debug_loclists
+                0x0000000000002274     0x2ca0 ../../lib/libcircle.a(string.o)
+ .debug_loclists
+                0x0000000000004f14      0x12b ../../lib/libcircle.a(sysinit.o)
+ .debug_loclists
+                0x000000000000503f     0x11d4 ../../lib/libcircle.a(timer.o)
+ .debug_loclists
+                0x0000000000006213      0xd6c ../../lib/libcircle.a(util.o)
+ .debug_loclists
+                0x0000000000006f7f       0xe7 ../../lib/libcircle.a(chainboot.o)
+ .debug_loclists
+                0x0000000000007066      0x4b8 ../../lib/libcircle.a(new.o)
+ .debug_loclists
+                0x000000000000751e      0x748 ../../lib/libcircle.a(heapallocator.o)
+ .debug_loclists
+                0x0000000000007c66      0x25d ../../lib/libcircle.a(memory64.o)
+ .debug_loclists
+                0x0000000000007ec3      0xc26 ../../lib/libcircle.a(synchronize64.o)
+ .debug_loclists
+                0x0000000000008ae9       0x30 ../../lib/libcircle.a(translationtable64.o)
+ .debug_loclists
+                0x0000000000008b19     0x10f1 ../../lib/libcircle.a(interruptgic.o)
+ .debug_loclists
+                0x0000000000009c0a      0x60b ../../lib/libcircle.a(devicetreeblob.o)
+ .debug_loclists
+                0x000000000000a215      0x72f ../../lib/libcircle.a(southbridge.o)
+ .debug_loclists
+                0x000000000000a944      0x327 ../../lib/libcircle.a(alloc.o)
+ .debug_loclists
+                0x000000000000ac6b       0x44 ../../lib/libcircle.a(assert.o)
+ .debug_loclists
+                0x000000000000acaf      0x9d4 ../../lib/libcircle.a(bcmframebuffer.o)
+ .debug_loclists
+                0x000000000000b683      0x3da ../../lib/libcircle.a(bcmpropertytags.o)
+ .debug_loclists
+                0x000000000000ba5d      0x23f ../../lib/libcircle.a(debug.o)
+ .debug_loclists
+                0x000000000000bc9c      0x4b0 ../../lib/libcircle.a(device.o)
+ .debug_loclists
+                0x000000000000c14c     0x1efa ../../lib/libcircle.a(dmachannel.o)
+ .debug_loclists
+                0x000000000000e046      0xa2b ../../lib/libcircle.a(logger.o)
+ .debug_loclists
+                0x000000000000ea71      0x3c3 ../../lib/libcircle.a(ptrlist.o)
+ .debug_loclists
+                0x000000000000ee34     0x246b ../../lib/libcircle.a(terminal.o)
+ .debug_loclists
+                0x000000000001129f      0x1ab ../../lib/libcircle.a(pageallocator.o)
+ .debug_loclists
+                0x000000000001144a     0x3015 ../../lib/libcircle.a(bcmpciehostbridge.o)
+ .debug_loclists
+                0x000000000001445f     0x16fe ../../lib/libcircle.a(dma4channel.o)
+ .debug_loclists
+                0x0000000000015b5d      0x10b ../../lib/libcircle.a(display.o)
+ .debug_loclists
+                0x0000000000015c68      0x33e ../../lib/libcircle.a(bcmmailbox.o)
+ .debug_loclists
+                0x0000000000015fa6      0x141 ../../lib/libcircle.a(chargenerator.o)
+ .debug_loclists
+                0x00000000000160e7      0x1a5 ../../lib/libcircle.a(exceptionhandler64.o)
+
+.debug_aranges  0x0000000000000000      0x720
+ .debug_aranges
+                0x0000000000000000       0x30 main.o
+ .debug_aranges
+                0x0000000000000030       0x30 kernel.o
+ .debug_aranges
+                0x0000000000000060       0x30 ../../lib/libcircle.a(actled.o)
+ .debug_aranges
+                0x0000000000000090       0x30 ../../lib/libcircle.a(devicenameservice.o)
+ .debug_aranges
+                0x00000000000000c0       0x30 ../../lib/libcircle.a(koptions.o)
+ .debug_aranges
+                0x00000000000000f0       0x30 ../../lib/libcircle.a(machineinfo.o)
+ .debug_aranges
+                0x0000000000000120       0x30 ../../lib/libcircle.a(screen.o)
+ .debug_aranges
+                0x0000000000000150       0x30 ../../lib/libcircle.a(string.o)
+ .debug_aranges
+                0x0000000000000180       0x30 ../../lib/libcircle.a(sysinit.o)
+ .debug_aranges
+                0x00000000000001b0       0x30 ../../lib/libcircle.a(timer.o)
+ .debug_aranges
+                0x00000000000001e0       0x30 ../../lib/libcircle.a(util.o)
+ .debug_aranges
+                0x0000000000000210       0x30 ../../lib/libcircle.a(chainboot.o)
+ .debug_aranges
+                0x0000000000000240       0x30 ../../lib/libcircle.a(new.o)
+ .debug_aranges
+                0x0000000000000270       0x30 ../../lib/libcircle.a(heapallocator.o)
+ .debug_aranges
+                0x00000000000002a0       0x20 ../../lib/libcircle.a(font8x16.o)
+ .debug_aranges
+                0x00000000000002c0       0x30 ../../lib/libcircle.a(memory64.o)
+ .debug_aranges
+                0x00000000000002f0       0x30 ../../lib/libcircle.a(synchronize64.o)
+ .debug_aranges
+                0x0000000000000320       0x30 ../../lib/libcircle.a(translationtable64.o)
+ .debug_aranges
+                0x0000000000000350       0x30 ../../lib/libcircle.a(interruptgic.o)
+ .debug_aranges
+                0x0000000000000380       0x30 ../../lib/libcircle.a(devicetreeblob.o)
+ .debug_aranges
+                0x00000000000003b0       0x30 ../../lib/libcircle.a(southbridge.o)
+ .debug_aranges
+                0x00000000000003e0       0x30 ../../lib/libcircle.a(alloc.o)
+ .debug_aranges
+                0x0000000000000410       0x30 ../../lib/libcircle.a(assert.o)
+ .debug_aranges
+                0x0000000000000440       0x30 ../../lib/libcircle.a(bcmframebuffer.o)
+ .debug_aranges
+                0x0000000000000470       0x30 ../../lib/libcircle.a(bcmpropertytags.o)
+ .debug_aranges
+                0x00000000000004a0       0x30 ../../lib/libcircle.a(debug.o)
+ .debug_aranges
+                0x00000000000004d0       0x30 ../../lib/libcircle.a(device.o)
+ .debug_aranges
+                0x0000000000000500       0x30 ../../lib/libcircle.a(dmachannel.o)
+ .debug_aranges
+                0x0000000000000530       0x30 ../../lib/libcircle.a(logger.o)
+ .debug_aranges
+                0x0000000000000560       0x30 ../../lib/libcircle.a(ptrlist.o)
+ .debug_aranges
+                0x0000000000000590       0x30 ../../lib/libcircle.a(terminal.o)
+ .debug_aranges
+                0x00000000000005c0       0x30 ../../lib/libcircle.a(pageallocator.o)
+ .debug_aranges
+                0x00000000000005f0       0x30 ../../lib/libcircle.a(bcmpciehostbridge.o)
+ .debug_aranges
+                0x0000000000000620       0x30 ../../lib/libcircle.a(dma4channel.o)
+ .debug_aranges
+                0x0000000000000650       0x30 ../../lib/libcircle.a(display.o)
+ .debug_aranges
+                0x0000000000000680       0x40 ../../lib/libcircle.a(bcmmailbox.o)
+ .debug_aranges
+                0x00000000000006c0       0x30 ../../lib/libcircle.a(chargenerator.o)
+ .debug_aranges
+                0x00000000000006f0       0x30 ../../lib/libcircle.a(exceptionhandler64.o)
+
+.debug_rnglists
+                0x0000000000000000     0x1bb0
+ .debug_rnglists
+                0x0000000000000000       0x17 main.o
+ .debug_rnglists
+                0x0000000000000017       0x17 kernel.o
+ .debug_rnglists
+                0x000000000000002e       0x82 ../../lib/libcircle.a(actled.o)
+ .debug_rnglists
+                0x00000000000000b0       0xd2 ../../lib/libcircle.a(devicenameservice.o)
+ .debug_rnglists
+                0x0000000000000182       0x92 ../../lib/libcircle.a(koptions.o)
+ .debug_rnglists
+                0x0000000000000214       0x7d ../../lib/libcircle.a(machineinfo.o)
+ .debug_rnglists
+                0x0000000000000291       0x46 ../../lib/libcircle.a(screen.o)
+ .debug_rnglists
+                0x00000000000002d7      0x1e9 ../../lib/libcircle.a(string.o)
+ .debug_rnglists
+                0x00000000000004c0       0x36 ../../lib/libcircle.a(sysinit.o)
+ .debug_rnglists
+                0x00000000000004f6      0x24e ../../lib/libcircle.a(timer.o)
+ .debug_rnglists
+                0x0000000000000744       0xa3 ../../lib/libcircle.a(util.o)
+ .debug_rnglists
+                0x00000000000007e7       0x4b ../../lib/libcircle.a(new.o)
+ .debug_rnglists
+                0x0000000000000832       0x9d ../../lib/libcircle.a(heapallocator.o)
+ .debug_rnglists
+                0x00000000000008cf       0x38 ../../lib/libcircle.a(memory64.o)
+ .debug_rnglists
+                0x0000000000000907      0x1f4 ../../lib/libcircle.a(synchronize64.o)
+ .debug_rnglists
+                0x0000000000000afb       0xe8 ../../lib/libcircle.a(interruptgic.o)
+ .debug_rnglists
+                0x0000000000000be3       0x41 ../../lib/libcircle.a(devicetreeblob.o)
+ .debug_rnglists
+                0x0000000000000c24       0x48 ../../lib/libcircle.a(southbridge.o)
+ .debug_rnglists
+                0x0000000000000c6c       0x24 ../../lib/libcircle.a(alloc.o)
+ .debug_rnglists
+                0x0000000000000c90       0x86 ../../lib/libcircle.a(bcmframebuffer.o)
+ .debug_rnglists
+                0x0000000000000d16       0x7f ../../lib/libcircle.a(debug.o)
+ .debug_rnglists
+                0x0000000000000d95       0x17 ../../lib/libcircle.a(device.o)
+ .debug_rnglists
+                0x0000000000000dac      0x13e ../../lib/libcircle.a(dmachannel.o)
+ .debug_rnglists
+                0x0000000000000eea       0xb7 ../../lib/libcircle.a(logger.o)
+ .debug_rnglists
+                0x0000000000000fa1       0x26 ../../lib/libcircle.a(ptrlist.o)
+ .debug_rnglists
+                0x0000000000000fc7      0x4f4 ../../lib/libcircle.a(terminal.o)
+ .debug_rnglists
+                0x00000000000014bb       0x4e ../../lib/libcircle.a(pageallocator.o)
+ .debug_rnglists
+                0x0000000000001509      0x491 ../../lib/libcircle.a(bcmpciehostbridge.o)
+ .debug_rnglists
+                0x000000000000199a       0xd8 ../../lib/libcircle.a(dma4channel.o)
+ .debug_rnglists
+                0x0000000000001a72      0x107 ../../lib/libcircle.a(bcmmailbox.o)
+ .debug_rnglists
+                0x0000000000001b79       0x37 ../../lib/libcircle.a(exceptionhandler64.o)
+
+.debug_line     0x0000000000000000    0x123d1
+ .debug_line    0x0000000000000000       0xba main.o
+ .debug_line    0x00000000000000ba      0x296 kernel.o
+ .debug_line    0x0000000000000350      0x285 ../../lib/libcircle.a(actled.o)
+ .debug_line    0x00000000000005d5      0x78d ../../lib/libcircle.a(devicenameservice.o)
+ .debug_line    0x0000000000000d62      0x8c3 ../../lib/libcircle.a(koptions.o)
+ .debug_line    0x0000000000001625      0xb3b ../../lib/libcircle.a(machineinfo.o)
+ .debug_line    0x0000000000002160      0x40b ../../lib/libcircle.a(screen.o)
+ .debug_line    0x000000000000256b     0x19f8 ../../lib/libcircle.a(string.o)
+ .debug_line    0x0000000000003f63      0x3c3 ../../lib/libcircle.a(sysinit.o)
+ .debug_line    0x0000000000004326     0x10ed ../../lib/libcircle.a(timer.o)
+ .debug_line    0x0000000000005413      0x989 ../../lib/libcircle.a(util.o)
+ .debug_line    0x0000000000005d9c       0xe3 ../../lib/libcircle.a(chainboot.o)
+ .debug_line    0x0000000000005e7f      0x28d ../../lib/libcircle.a(new.o)
+ .debug_line    0x000000000000610c      0x58f ../../lib/libcircle.a(heapallocator.o)
+ .debug_line    0x000000000000669b       0x3f ../../lib/libcircle.a(font8x16.o)
+ .debug_line    0x00000000000066da      0x347 ../../lib/libcircle.a(memory64.o)
+ .debug_line    0x0000000000006a21      0x98c ../../lib/libcircle.a(synchronize64.o)
+ .debug_line    0x00000000000073ad      0x1e3 ../../lib/libcircle.a(translationtable64.o)
+ .debug_line    0x0000000000007590      0xca6 ../../lib/libcircle.a(interruptgic.o)
+ .debug_line    0x0000000000008236      0x60c ../../lib/libcircle.a(devicetreeblob.o)
+ .debug_line    0x0000000000008842      0x78f ../../lib/libcircle.a(southbridge.o)
+ .debug_line    0x0000000000008fd1      0x21b ../../lib/libcircle.a(alloc.o)
+ .debug_line    0x00000000000091ec       0xd2 ../../lib/libcircle.a(assert.o)
+ .debug_line    0x00000000000092be      0x76b ../../lib/libcircle.a(bcmframebuffer.o)
+ .debug_line    0x0000000000009a29      0x250 ../../lib/libcircle.a(bcmpropertytags.o)
+ .debug_line    0x0000000000009c79      0x2d0 ../../lib/libcircle.a(debug.o)
+ .debug_line    0x0000000000009f49      0x31a ../../lib/libcircle.a(device.o)
+ .debug_line    0x000000000000a263     0x11c6 ../../lib/libcircle.a(dmachannel.o)
+ .debug_line    0x000000000000b429      0x971 ../../lib/libcircle.a(logger.o)
+ .debug_line    0x000000000000bd9a      0x410 ../../lib/libcircle.a(ptrlist.o)
+ .debug_line    0x000000000000c1aa     0x279d ../../lib/libcircle.a(terminal.o)
+ .debug_line    0x000000000000e947      0x244 ../../lib/libcircle.a(pageallocator.o)
+ .debug_line    0x000000000000eb8b     0x201b ../../lib/libcircle.a(bcmpciehostbridge.o)
+ .debug_line    0x0000000000010ba6      0xeb7 ../../lib/libcircle.a(dma4channel.o)
+ .debug_line    0x0000000000011a5d      0x2e3 ../../lib/libcircle.a(display.o)
+ .debug_line    0x0000000000011d40      0x326 ../../lib/libcircle.a(bcmmailbox.o)
+ .debug_line    0x0000000000012066      0x141 ../../lib/libcircle.a(chargenerator.o)
+ .debug_line    0x00000000000121a7      0x22a ../../lib/libcircle.a(exceptionhandler64.o)
+
+.debug_str      0x0000000000000000     0x83b9
+ .debug_str     0x0000000000000000     0x83b9 main.o
+                                        0xcd8 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 kernel.o
+                                       0x1d14 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(actled.o)
+                                       0x1a01 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(devicenameservice.o)
+                                        0x76d (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(koptions.o)
+                                        0xba6 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(machineinfo.o)
+                                       0x228a (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(screen.o)
+                                        0xe77 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(string.o)
+                                        0x775 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(sysinit.o)
+                                       0x3109 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(timer.o)
+                                       0x14aa (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(util.o)
+                                        0x343 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(chainboot.o)
+                                        0x1fb (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(new.o)
+                                        0xbfc (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(heapallocator.o)
+                                       0x14cb (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(font8x16.o)
+                                        0x14e (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(memory64.o)
+                                       0x19d6 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(synchronize64.o)
+                                        0x28c (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(translationtable64.o)
+                                        0x46a (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(interruptgic.o)
+                                       0x1f33 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(devicetreeblob.o)
+                                       0x161c (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(southbridge.o)
+                                       0x1eb9 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(alloc.o)
+                                        0xb36 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(assert.o)
+                                       0x1253 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(bcmframebuffer.o)
+                                       0x2026 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(bcmpropertytags.o)
+                                        0xd6a (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(debug.o)
+                                       0x1316 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(device.o)
+                                        0x777 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(dmachannel.o)
+                                       0x223e (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(logger.o)
+                                       0x2086 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(ptrlist.o)
+                                        0x309 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(terminal.o)
+                                       0x2171 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(pageallocator.o)
+                                        0x380 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(bcmpciehostbridge.o)
+                                       0x2985 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(dma4channel.o)
+                                       0x1410 (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(display.o)
+                                        0x4fb (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(bcmmailbox.o)
+                                        0xf7f (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(chargenerator.o)
+                                        0x42b (size before relaxing)
+ .debug_str     0x00000000000083b9        0x0 ../../lib/libcircle.a(exceptionhandler64.o)
+                                       0x13fe (size before relaxing)
+
+.debug_line_str
+                0x0000000000000000      0x4ea
+ .debug_line_str
+                0x0000000000000000      0x4ea main.o
+                                         0xf4 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 kernel.o
+                                        0x13e (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(actled.o)
+                                         0xe0 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(devicenameservice.o)
+                                         0xea (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(koptions.o)
+                                         0xb2 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(machineinfo.o)
+                                        0x155 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(screen.o)
+                                         0xdb (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(string.o)
+                                         0x91 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(sysinit.o)
+                                        0x17e (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(timer.o)
+                                         0xf4 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(util.o)
+                                         0x6e (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(chainboot.o)
+                                         0x7d (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(new.o)
+                                         0xd7 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(heapallocator.o)
+                                        0x11a (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(font8x16.o)
+                                         0x72 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(memory64.o)
+                                        0x133 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(synchronize64.o)
+                                         0x96 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(translationtable64.o)
+                                         0xd4 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(interruptgic.o)
+                                        0x12a (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(devicetreeblob.o)
+                                        0x10e (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(southbridge.o)
+                                        0x117 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(alloc.o)
+                                         0xd9 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(assert.o)
+                                         0xdb (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(bcmframebuffer.o)
+                                        0x12b (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(bcmpropertytags.o)
+                                        0x116 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(debug.o)
+                                         0xd0 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(device.o)
+                                         0x9d (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(dmachannel.o)
+                                        0x134 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(logger.o)
+                                        0x127 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(ptrlist.o)
+                                         0x86 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(terminal.o)
+                                        0x10c (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(pageallocator.o)
+                                         0xc1 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(bcmpciehostbridge.o)
+                                        0x14b (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(dma4channel.o)
+                                        0x101 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(display.o)
+                                         0x7a (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(bcmmailbox.o)
+                                         0xeb (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(chargenerator.o)
+                                         0x99 (size before relaxing)
+ .debug_line_str
+                0x00000000000004ea        0x0 ../../lib/libcircle.a(exceptionhandler64.o)
+                                        0x11d (size before relaxing)
+
+.comment        0x0000000000000000       0x45
+ .comment       0x0000000000000000       0x45 main.o
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 kernel.o
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(actled.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(devicenameservice.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(koptions.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(machineinfo.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(screen.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(string.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(sysinit.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(timer.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(util.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(chainboot.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(new.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(heapallocator.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(font8x16.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(memory64.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(synchronize64.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(translationtable64.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(interruptgic.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(devicetreeblob.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(southbridge.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(alloc.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(assert.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(bcmframebuffer.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(bcmpropertytags.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(debug.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(device.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(dmachannel.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(logger.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(ptrlist.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(terminal.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(pageallocator.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(bcmpciehostbridge.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(dma4channel.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(display.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(bcmmailbox.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(chargenerator.o)
+                                         0x46 (size before relaxing)
+ .comment       0x0000000000000045        0x0 ../../lib/libcircle.a(exceptionhandler64.o)
+                                         0x46 (size before relaxing)
+
+.debug_frame    0x0000000000000000     0x4b20
+ .debug_frame   0x0000000000000000       0x38 main.o
+ .debug_frame   0x0000000000000038       0xb0 kernel.o
+ .debug_frame   0x00000000000000e8       0xd0 ../../lib/libcircle.a(actled.o)
+ .debug_frame   0x00000000000001b8      0x2a8 ../../lib/libcircle.a(devicenameservice.o)
+ .debug_frame   0x0000000000000460      0x388 ../../lib/libcircle.a(koptions.o)
+ .debug_frame   0x00000000000007e8      0x420 ../../lib/libcircle.a(machineinfo.o)
+ .debug_frame   0x0000000000000c08      0x230 ../../lib/libcircle.a(screen.o)
+ .debug_frame   0x0000000000000e38      0x510 ../../lib/libcircle.a(string.o)
+ .debug_frame   0x0000000000001348      0x188 ../../lib/libcircle.a(sysinit.o)
+ .debug_frame   0x00000000000014d0      0x4a0 ../../lib/libcircle.a(timer.o)
+ .debug_frame   0x0000000000001970      0x218 ../../lib/libcircle.a(util.o)
+ .debug_frame   0x0000000000001b88       0x80 ../../lib/libcircle.a(chainboot.o)
+ .debug_frame   0x0000000000001c08      0x1d0 ../../lib/libcircle.a(new.o)
+ .debug_frame   0x0000000000001dd8      0x178 ../../lib/libcircle.a(heapallocator.o)
+ .debug_frame   0x0000000000001f50      0x158 ../../lib/libcircle.a(memory64.o)
+ .debug_frame   0x00000000000020a8      0x128 ../../lib/libcircle.a(synchronize64.o)
+ .debug_frame   0x00000000000021d0       0x98 ../../lib/libcircle.a(translationtable64.o)
+ .debug_frame   0x0000000000002268      0x2f0 ../../lib/libcircle.a(interruptgic.o)
+ .debug_frame   0x0000000000002558      0x170 ../../lib/libcircle.a(devicetreeblob.o)
+ .debug_frame   0x00000000000026c8      0x240 ../../lib/libcircle.a(southbridge.o)
+ .debug_frame   0x0000000000002908       0xd0 ../../lib/libcircle.a(alloc.o)
+ .debug_frame   0x00000000000029d8       0x40 ../../lib/libcircle.a(assert.o)
+ .debug_frame   0x0000000000002a18      0x390 ../../lib/libcircle.a(bcmframebuffer.o)
+ .debug_frame   0x0000000000002da8       0xb8 ../../lib/libcircle.a(bcmpropertytags.o)
+ .debug_frame   0x0000000000002e60       0xc0 ../../lib/libcircle.a(debug.o)
+ .debug_frame   0x0000000000002f20      0x1e0 ../../lib/libcircle.a(device.o)
+ .debug_frame   0x0000000000003100      0x350 ../../lib/libcircle.a(dmachannel.o)
+ .debug_frame   0x0000000000003450      0x2c0 ../../lib/libcircle.a(logger.o)
+ .debug_frame   0x0000000000003710      0x188 ../../lib/libcircle.a(ptrlist.o)
+ .debug_frame   0x0000000000003898      0x680 ../../lib/libcircle.a(terminal.o)
+ .debug_frame   0x0000000000003f18       0xd8 ../../lib/libcircle.a(pageallocator.o)
+ .debug_frame   0x0000000000003ff0      0x5b0 ../../lib/libcircle.a(bcmpciehostbridge.o)
+ .debug_frame   0x00000000000045a0      0x2a0 ../../lib/libcircle.a(dma4channel.o)
+ .debug_frame   0x0000000000004840       0xa0 ../../lib/libcircle.a(display.o)
+ .debug_frame   0x00000000000048e0      0x108 ../../lib/libcircle.a(bcmmailbox.o)
+ .debug_frame   0x00000000000049e8       0x40 ../../lib/libcircle.a(chargenerator.o)
+ .debug_frame   0x0000000000004a28       0xf8 ../../lib/libcircle.a(exceptionhandler64.o)

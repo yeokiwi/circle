@@ -1,0 +1,6 @@
+linediscipline.o linediscipline.d: linediscipline.cpp \
+ ../../include/circle/input/linediscipline.h \
+ ../../include/circle/device.h ../../include/circle/ptrlist.h \
+ ../../include/circle/string.h ../../include/circle/stdarg.h \
+ ../../include/circle/types.h ../../include/assert.h \
+ ../../include/circle/macros.h

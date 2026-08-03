@@ -77,7 +77,10 @@ static unsigned HWChannelConstant (unsigned nChannel)
 #endif
 
 CGPIOController::CGPIOController (CInterruptSystem *pInterruptSystem)
-:	m_UserTimer (pInterruptSystem, TimerHandler, this, WAVE_USE_FIQ),
+:
+#if RASPPI <= 4
+	m_UserTimer (pInterruptSystem, TimerHandler, this, WAVE_USE_FIQ),
+#endif
 	m_nNowUs (0),
 	m_nLastDelayUs (0),
 	m_nSoftActiveCount (0),
@@ -88,6 +91,12 @@ CGPIOController::CGPIOController (CInterruptSystem *pInterruptSystem)
 	m_nHWActualFrequency (0),
 	m_nHWRange (0)
 {
+#if RASPPI > 4
+	// pInterruptSystem is only used to drive the software PWM CUserTimer,
+	// which is not available on the Raspberry Pi 5 (RP1).
+	(void) pInterruptSystem;
+#endif
+
 	for (unsigned i = 0; i < GPIO_CONTROL_PINS; i++)
 	{
 		m_Mode[i]   = PinModeManual;
@@ -115,7 +124,9 @@ CGPIOController::~CGPIOController (void)
 {
 	StopHardwarePWM ();
 
+#if RASPPI <= 4
 	m_UserTimer.Stop ();
+#endif
 }
 
 boolean CGPIOController::Initialize (void)
@@ -130,9 +141,14 @@ boolean CGPIOController::Initialize (void)
 		m_nLevel[i] = LOW;
 	}
 
+#if RASPPI <= 4
 	// The user timer is now armed with a long (idle) delay. As soon as a
 	// software PWM is requested, the handler shortens the interval.
 	return m_UserTimer.Initialize ();
+#else
+	// No software PWM timer on the Raspberry Pi 5 (RP1); nothing to arm.
+	return TRUE;
+#endif
 }
 
 //
@@ -232,6 +248,7 @@ boolean CGPIOController::StartSoftPWM (unsigned nIndex, unsigned nFrequencyHz,
 		*pActualFreqHz = 0;
 	}
 
+#if RASPPI <= 4
 	// A pin currently used by the hardware PWM cannot be used for software PWM.
 	if (m_Mode[nIndex] == PinModeHardwarePWM)
 	{
@@ -322,6 +339,14 @@ boolean CGPIOController::StartSoftPWM (unsigned nIndex, unsigned nFrequencyHz,
 	}
 
 	return TRUE;
+#else
+	// Software PWM relies on CUserTimer, which is not available on the
+	// Raspberry Pi 5 (RP1). Report failure so the web UI shows an error.
+	(void) nFrequencyHz;
+	(void) nDutyPercent;
+
+	return FALSE;
+#endif
 }
 
 void CGPIOController::StopSoftPWM (unsigned nIndex)
@@ -363,6 +388,8 @@ unsigned CGPIOController::GetSoftPWMDuty (unsigned nIndex) const
 	return m_Soft[nIndex].nDutyPercent;
 }
 
+#if RASPPI <= 4
+
 void CGPIOController::KickSoftTimer (void)
 {
 	// Wake the timer so a newly configured pin toggles without waiting for the
@@ -371,6 +398,8 @@ void CGPIOController::KickSoftTimer (void)
 	m_nLastDelayUs = 2;
 	m_UserTimer.Start (2);
 }
+
+#endif
 
 //
 // Hardware PWM
@@ -710,6 +739,8 @@ boolean CGPIOController::ComputeHWClock (unsigned nFrequencyHz, unsigned *pRange
 
 #endif
 
+#if RASPPI <= 4
+
 void CGPIOController::TimerHandler (CUserTimer *pUserTimer, void *pParam)
 {
 	CGPIOController *pThis = (CGPIOController *) pParam;
@@ -781,3 +812,5 @@ void CGPIOController::TimerHandler (CUserTimer *pUserTimer, void *pParam)
 	pThis->m_nLastDelayUs = nMinDelay;
 	pUserTimer->Start (nMinDelay);
 }
+
+#endif

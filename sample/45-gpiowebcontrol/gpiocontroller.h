@@ -22,8 +22,8 @@
 
 #include <circle/interrupt.h>
 #include <circle/gpiopin.h>
-#include <circle/usertimer.h>
 #if RASPPI <= 4
+	#include <circle/usertimer.h>
 	#include <circle/pwmoutput.h>
 #endif
 #include <circle/types.h>
@@ -171,10 +171,12 @@ public:
 	unsigned GetHWChannelDuty (unsigned nChannel) const;
 
 private:
+#if RASPPI <= 4
 	static void TimerHandler (CUserTimer *pUserTimer, void *pParam);
 
 	// wake the software PWM timer so a configuration change takes effect soon
 	void KickSoftTimer (void);
+#endif
 
 #if RASPPI <= 4
 	// find a clock source and integer divider for a hardware PWM frequency
@@ -184,7 +186,9 @@ private:
 #endif
 
 private:
+#if RASPPI <= 4
 	CUserTimer m_UserTimer;
+#endif
 
 	CGPIOPin m_Pin[GPIO_CONTROL_PINS];
 	TPinMode m_Mode[GPIO_CONTROL_PINS];		// current mode per pin
