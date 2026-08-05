@@ -1,7 +1,8 @@
 README
 
 This sample program is only working on Raspberry Pi models with an on-board
-Ethernet controller (or a supported USB Ethernet device) and an SD card.
+Ethernet controller (or a supported USB Ethernet device) and an SD card or
+on-board eMMC memory (Compute Module 5).
 
 It runs a small HTTP web server which lets you do the following from a web
 browser:
@@ -32,9 +33,9 @@ browser:
 	      each with its own frequency and duty cycle. Any number of pins
 	      can run software PWM at the same time.
 
-	3. Read and write the SD card: list the files in the root directory,
-	   upload (download to the SD card) new files, download files back to
-	   your computer and delete files.
+	3. Read and write the SD card (or the on-board eMMC memory on a
+	   Compute Module 5): browse the directories, upload new files,
+	   download files back to your computer and delete files.
 
 	4. Reboot the Raspberry Pi.
 
@@ -56,9 +57,33 @@ officially specified range of the PWM peripheral. The output may be less clean
 at the very highest frequencies. For a very clean fixed-frequency 50% clock on
 the dedicated clock pins, see the class CGPIOClock and sample/11-gpioclock.
 
-The SD card is accessed with the FatFs file system (addon/fatfs) on top of the
-EMMC driver (addon/SDCard). Long file names are supported. Only the root
-directory is listed.
+The storage device is accessed with the FatFs file system (addon/fatfs) on top
+of the EMMC driver (addon/SDCard). Long file names are supported. The directory
+tree can be browsed, starting from the root directory of the first FAT partition
+of the device.
+
+Compute Module 5
+----------------
+
+On a Compute Module 5 (not the CM5 Lite) the on-board eMMC memory is used
+instead of an SD card. It is connected to the same SDHCI controller of the
+BCM2712 SoC, which drives the SD card on the Raspberry Pi 5. The CM5 is detected
+at run-time with CEMMCDevice::GetDefaultDeviceForMachine(), so the same kernel
+image works on a Raspberry Pi 5 with SD card and on a CM5 with eMMC memory. The
+system option USE_EMBEDDED_MMC_CM (see include/circle/sysconfig.h) is required
+for the Compute Module 3+ and 4 only.
+
+Build this sample with AARCH = 64 and RASPPI = 5 for the CM5. To install it,
+put the CM5 into the USB boot mode (jumper "nRPI_BOOT" on the IO board) and
+attach the eMMC memory as a USB mass-storage device to your PC using the tool
+"rpiboot" from [https://github.com/raspberrypi/usbboot]. Then copy the firmware
+files (see boot/), config64.txt (renamed to config.txt) and kernel_2712.img to
+the FAT partition ("bootfs") of the eMMC memory.
+
+Only FAT partitions can be read. A Raspberry Pi OS installation has its root
+file system on an ext4 partition, which is not supported by Circle. It will be
+listed in the system log by the partition manager (as "emmc1-2"), but its files
+cannot be accessed.
 
 Before building this sample you need to build the two add-on libraries it uses:
 
@@ -84,9 +109,14 @@ Notes and limitations:
 	  MAX_CONTENT_SIZE in webserver.cpp). Uploads are limited by
 	  MAX_UPLOAD_SIZE.
 
-	- The SD card is the same card the program was booted from. Deleting or
-	  overwriting the firmware or kernel files will make the Raspberry Pi
-	  unbootable, so be careful which files you remove.
+	- At most MAX_FILE_ENTRIES (see webserver.cpp) entries are shown per
+	  directory.
+
+	- The storage device is normally the same device the program was booted
+	  from. Deleting or overwriting the firmware or kernel files will make
+	  the Raspberry Pi (or Compute Module) unbootable, so be careful which
+	  files you remove. This is especially important for the eMMC memory of
+	  a Compute Module, which cannot be simply replaced like an SD card.
 
 WARNING: Driving GPIO pins connects them directly to the Raspberry Pi SoC. Make
 sure that whatever you connect to a pin is safe to drive (3.3V logic, no shorts

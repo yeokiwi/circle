@@ -62,9 +62,19 @@ boolean CFileManager::Mount (void)
 	return bResult;
 }
 
-unsigned CFileManager::ListFiles (TFileManagerEntry *pEntries, unsigned nMaxEntries)
+unsigned CFileManager::ListFiles (const char *pDirectory, TFileManagerEntry *pEntries,
+				 unsigned nMaxEntries)
 {
+	assert (pDirectory != 0);
 	assert (pEntries != 0);
+
+	if (!IsValidPath (pDirectory))
+	{
+		return 0;
+	}
+
+	CString Path;
+	MakePath (Path, pDirectory);
 
 	m_Mutex.Acquire ();
 
@@ -74,16 +84,18 @@ unsigned CFileManager::ListFiles (TFileManagerEntry *pEntries, unsigned nMaxEntr
 	{
 		DIR Directory;
 		FILINFO FileInfo;
-		FRESULT Result = f_findfirst (&Directory, &FileInfo, FILE_DRIVE "/", "*");
+		FRESULT Result = f_findfirst (&Directory, &FileInfo, (const char *) Path, "*");
 
 		while (Result == FR_OK && FileInfo.fname[0] != '\0' && nCount < nMaxEntries)
 		{
-			// skip directories, hidden and system entries
-			if (!(FileInfo.fattrib & (AM_DIR | AM_HID | AM_SYS)))
+			// skip hidden and system entries
+			if (!(FileInfo.fattrib & (AM_HID | AM_SYS)))
 			{
 				strncpy (pEntries[nCount].Name, FileInfo.fname, FF_MAX_LFN);
 				pEntries[nCount].Name[FF_MAX_LFN] = '\0';
-				pEntries[nCount].nSize = (unsigned) FileInfo.fsize;
+				pEntries[nCount].bDirectory = !!(FileInfo.fattrib & AM_DIR);
+				pEntries[nCount].nSize =   pEntries[nCount].bDirectory
+							 ? 0 : (unsigned) FileInfo.fsize;
 
 				nCount++;
 			}
@@ -96,21 +108,44 @@ unsigned CFileManager::ListFiles (TFileManagerEntry *pEntries, unsigned nMaxEntr
 
 	m_Mutex.Release ();
 
+	// Sort the entries: directories first, each group by name
+	for (unsigned i = 0; i + 1 < nCount; i++)
+	{
+		unsigned nMin = i;
+		for (unsigned j = i + 1; j < nCount; j++)
+		{
+			if (   (   pEntries[j].bDirectory
+				&& !pEntries[nMin].bDirectory)
+			    || (   pEntries[j].bDirectory == pEntries[nMin].bDirectory
+				&& strcmp (pEntries[j].Name, pEntries[nMin].Name) < 0))
+			{
+				nMin = j;
+			}
+		}
+
+		if (nMin != i)
+		{
+			TFileManagerEntry Temp = pEntries[i];
+			pEntries[i] = pEntries[nMin];
+			pEntries[nMin] = Temp;
+		}
+	}
+
 	return nCount;
 }
 
-boolean CFileManager::WriteFile (const char *pName, const u8 *pData, unsigned nLength)
+boolean CFileManager::WriteFile (const char *pPath, const u8 *pData, unsigned nLength)
 {
-	assert (pName != 0);
+	assert (pPath != 0);
 	assert (pData != 0 || nLength == 0);
 
-	if (!IsValidName (pName))
+	if (!IsValidPath (pPath) || pPath[0] == '\0')
 	{
 		return FALSE;
 	}
 
 	CString Path;
-	MakePath (Path, pName);
+	MakePath (Path, pPath);
 
 	m_Mutex.Acquire ();
 
@@ -150,24 +185,24 @@ boolean CFileManager::WriteFile (const char *pName, const u8 *pData, unsigned nL
 
 	if (!bOK)
 	{
-		CLogger::Get ()->Write (FromFileManager, LogError, "Cannot write file %s", pName);
+		CLogger::Get ()->Write (FromFileManager, LogError, "Cannot write file %s", pPath);
 	}
 
 	return bOK;
 }
 
-int CFileManager::ReadFile (const char *pName, u8 *pBuffer, unsigned nMaxLength)
+int CFileManager::ReadFile (const char *pPath, u8 *pBuffer, unsigned nMaxLength)
 {
-	assert (pName != 0);
+	assert (pPath != 0);
 	assert (pBuffer != 0);
 
-	if (!IsValidName (pName))
+	if (!IsValidPath (pPath) || pPath[0] == '\0')
 	{
 		return -1;
 	}
 
 	CString Path;
-	MakePath (Path, pName);
+	MakePath (Path, pPath);
 
 	m_Mutex.Acquire ();
 
@@ -200,17 +235,17 @@ int CFileManager::ReadFile (const char *pName, u8 *pBuffer, unsigned nMaxLength)
 	return nResult;
 }
 
-boolean CFileManager::DeleteFile (const char *pName)
+boolean CFileManager::DeleteFile (const char *pPath)
 {
-	assert (pName != 0);
+	assert (pPath != 0);
 
-	if (!IsValidName (pName))
+	if (!IsValidPath (pPath) || pPath[0] == '\0')
 	{
 		return FALSE;
 	}
 
 	CString Path;
-	MakePath (Path, pName);
+	MakePath (Path, pPath);
 
 	m_Mutex.Acquire ();
 
@@ -225,7 +260,7 @@ boolean CFileManager::DeleteFile (const char *pName)
 
 	if (!bOK)
 	{
-		CLogger::Get ()->Write (FromFileManager, LogWarning, "Cannot delete file %s", pName);
+		CLogger::Get ()->Write (FromFileManager, LogWarning, "Cannot delete file %s", pPath);
 	}
 
 	return bOK;
@@ -261,8 +296,82 @@ boolean CFileManager::IsValidName (const char *pName)
 	return TRUE;
 }
 
-void CFileManager::MakePath (CString &rPath, const char *pName)
+boolean CFileManager::IsValidPath (const char *pPath)
 {
-	rPath = FILE_DRIVE "/";
+	assert (pPath != 0);
+
+	// the empty path is the root directory
+	if (pPath[0] == '\0')
+	{
+		return TRUE;
+	}
+
+	// must be relative to the root directory, no drive prefix
+	if (pPath[0] == '/')
+	{
+		return FALSE;
+	}
+
+	// check each path component on its own
+	const char *pComponent = pPath;
+	while (*pComponent != '\0')
+	{
+		const char *pEnd = pComponent;
+		while (*pEnd != '\0' && *pEnd != '/')
+		{
+			pEnd++;
+		}
+
+		size_t nLength = pEnd - pComponent;
+		if (nLength == 0)			// "//" or trailing "/"
+		{
+			return FALSE;
+		}
+
+		if (   (nLength == 1 && pComponent[0] == '.')
+		    || (nLength == 2 && pComponent[0] == '.' && pComponent[1] == '.'))
+		{
+			return FALSE;
+		}
+
+		for (const char *p = pComponent; p < pEnd; p++)
+		{
+			if (   *p == '\\'
+			    || *p == ':')
+			{
+				return FALSE;
+			}
+		}
+
+		pComponent = pEnd;
+		if (*pComponent == '/')
+		{
+			pComponent++;
+		}
+	}
+
+	return TRUE;
+}
+
+void CFileManager::ConcatPath (CString &rPath, const char *pDirectory, const char *pName)
+{
+	assert (pDirectory != 0);
+	assert (pName != 0);
+
+	rPath = pDirectory;
+
+	if (pDirectory[0] != '\0')
+	{
+		rPath.Append ("/");
+	}
+
 	rPath.Append (pName);
+}
+
+void CFileManager::MakePath (CString &rPath, const char *pPath)
+{
+	assert (pPath != 0);
+
+	rPath = FILE_DRIVE "/";
+	rPath.Append (pPath);
 }

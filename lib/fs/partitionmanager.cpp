@@ -114,17 +114,32 @@ boolean CPartitionManager::Initialize (void)
 		    || MBR.Partition[i].LBAFirstSector == 0
 		    || MBR.Partition[i].NumberOfSectors == 0)
 		{
+			if (MBR.Partition[i].Type != 0)
+			{
+				CLogger::Get ()->Write (FromPartitionManager, LogDebug,
+							"Ignoring partition %u (type 0x%02X)",
+							i+1, (unsigned) MBR.Partition[i].Type);
+			}
+
 			continue;
 		}
 
 		assert (m_pPartition[i] == 0);
-		m_pPartition[i] = new CPartition (m_pDevice, MBR.Partition[i].LBAFirstSector, 
+		m_pPartition[i] = new CPartition (m_pDevice, MBR.Partition[i].LBAFirstSector,
 						  MBR.Partition[i].NumberOfSectors);
 		assert (m_pPartition[i] != 0);
 
 		CString PartitionName;
 		PartitionName.Format ("%s-%u", (const char *) m_DeviceName, ++nPartition);
 		CDeviceNameService::Get ()->AddDevice (PartitionName, m_pPartition[i], TRUE);
+
+		CLogger::Get ()->Write (FromPartitionManager, LogNotice,
+					"%s: type 0x%02X, first sector %u, %u MBytes",
+					(const char *) PartitionName,
+					(unsigned) MBR.Partition[i].Type,
+					MBR.Partition[i].LBAFirstSector,
+					(unsigned) (  (u64) MBR.Partition[i].NumberOfSectors
+						    * FS_BLOCK_SIZE / 0x100000));
 	}
 
 	if (nPartition == 0)

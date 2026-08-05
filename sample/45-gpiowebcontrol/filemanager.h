@@ -32,52 +32,66 @@
 struct TFileManagerEntry
 {
 	char	 Name[FF_MAX_LFN + 1];		// 0-terminated file name
-	unsigned nSize;				// file size in bytes
+	unsigned nSize;				// file size in bytes (0 for directories)
+	boolean	 bDirectory;			// is this entry a sub-directory?
 };
 
-class CFileManager	/// Read/write/delete access to files in the SD card root directory
+class CFileManager	/// Read/write/delete access to the files on the SD card or eMMC memory
 {
 public:
 	CFileManager (void);
 	~CFileManager (void);
 
-	/// \brief Mount the SD card file system
+	/// \brief Mount the file system of the SD card or eMMC memory
 	/// \return Operation successful?
-	/// \note The SD card device (CEMMCDevice) must be initialized before.
+	/// \note The device (CEMMCDevice) must be initialized before.
 	boolean Mount (void);
 
+	/// \param pDirectory Directory to be listed ("" for the root directory)
 	/// \param pEntries Array to be filled with the directory entries
 	/// \param nMaxEntries Size of the array
-	/// \return Number of entries written to pEntries
-	unsigned ListFiles (TFileManagerEntry *pEntries, unsigned nMaxEntries);
+	/// \return Number of entries written to pEntries (directories come first)
+	unsigned ListFiles (const char *pDirectory, TFileManagerEntry *pEntries,
+			    unsigned nMaxEntries);
 
 	/// \brief Create (or overwrite) a file and write the given data to it
-	/// \param pName File name (without path)
+	/// \param pPath File path relative to the root directory
 	/// \param pData Data to be written
 	/// \param nLength Number of bytes to write
 	/// \return Operation successful?
-	boolean WriteFile (const char *pName, const u8 *pData, unsigned nLength);
+	boolean WriteFile (const char *pPath, const u8 *pData, unsigned nLength);
 
 	/// \brief Read a whole file into a buffer
-	/// \param pName File name (without path)
+	/// \param pPath File path relative to the root directory
 	/// \param pBuffer Buffer to receive the file content
 	/// \param nMaxLength Size of the buffer
 	/// \return Number of bytes read, or -1 on error, or -2 if the file does not fit
-	int ReadFile (const char *pName, u8 *pBuffer, unsigned nMaxLength);
+	int ReadFile (const char *pPath, u8 *pBuffer, unsigned nMaxLength);
 
 	/// \brief Delete a file
-	/// \param pName File name (without path)
+	/// \param pPath File path relative to the root directory
 	/// \return Operation successful?
-	boolean DeleteFile (const char *pName);
+	boolean DeleteFile (const char *pPath);
 
-	/// \brief Check that a name is a plain file name in the root directory
+	/// \brief Check that a name is a plain file name (one path component)
 	/// \param pName File name to check
 	/// \return TRUE if the name is safe to use (no path components)
 	static boolean IsValidName (const char *pName);
 
+	/// \brief Check that a path is a relative path below the root directory
+	/// \param pPath Path to check ("" is the root directory)
+	/// \return TRUE if the path is safe to use (no "..", no drive, not absolute)
+	static boolean IsValidPath (const char *pPath);
+
+	/// \brief Build the path "<directory>/<name>" (without drive)
+	/// \param rPath Is set to the resulting path
+	/// \param pDirectory Directory path ("" for the root directory)
+	/// \param pName File or directory name to be appended
+	static void ConcatPath (CString &rPath, const char *pDirectory, const char *pName);
+
 private:
-	// build "SD:/<name>" into rPath
-	static void MakePath (CString &rPath, const char *pName);
+	// build "SD:/<path>" into rPath
+	static void MakePath (CString &rPath, const char *pPath);
 
 private:
 	FATFS	m_FileSystem;

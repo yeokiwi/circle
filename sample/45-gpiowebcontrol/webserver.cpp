@@ -90,13 +90,21 @@ THTTPStatus CWebServer::GetContent (const char  *pPath,
 		return HTTPNotFound;
 	}
 
+	// Directory currently shown in the file manager ("" is the root directory)
+	CString Directory;
+	if (   !GetStringParam (pParams, "dir", Directory)
+	    || !CFileManager::IsValidPath ((const char *) Directory))
+	{
+		Directory = "";
+	}
+
 	// Apply any requested action and collect a status message for the user.
 	CString Message;
-	HandleActions (pParams, Message);
-	HandleUpload (Message);
+	HandleActions (pParams, (const char *) Directory, Message);
+	HandleUpload ((const char *) Directory, Message);
 
 	CString Page;
-	BuildPage (Page, Message);
+	BuildPage (Page, Message, (const char *) Directory);
 
 	unsigned nLength = Page.GetLength ();
 
@@ -119,9 +127,10 @@ THTTPStatus CWebServer::GetContent (const char  *pPath,
 	return HTTPOK;
 }
 
-void CWebServer::HandleActions (const char *pQuery, CString &rMessage)
+void CWebServer::HandleActions (const char *pQuery, const char *pDirectory, CString &rMessage)
 {
 	assert (pQuery != 0);
+	assert (pDirectory != 0);
 	assert (m_pController != 0);
 
 	// Reboot request
@@ -251,23 +260,28 @@ void CWebServer::HandleActions (const char *pQuery, CString &rMessage)
 		}
 	}
 
-	// File deletion: "delete=<name>"
+	// File deletion: "delete=<name>" (in the currently shown directory)
 	CString FileName;
 	if (GetStringParam (pQuery, "delete", FileName))
 	{
-		if (m_pFileManager->DeleteFile ((const char *) FileName))
+		CString Path;
+		CFileManager::ConcatPath (Path, pDirectory, (const char *) FileName);
+
+		if (   CFileManager::IsValidName ((const char *) FileName)
+		    && m_pFileManager->DeleteFile ((const char *) Path))
 		{
-			rMessage.Format ("Deleted file \"%s\"", (const char *) FileName);
+			rMessage.Format ("Deleted file \"%s\"", (const char *) Path);
 		}
 		else
 		{
-			rMessage.Format ("Cannot delete file \"%s\"", (const char *) FileName);
+			rMessage.Format ("Cannot delete file \"%s\"", (const char *) Path);
 		}
 	}
 }
 
-void CWebServer::HandleUpload (CString &rMessage)
+void CWebServer::HandleUpload (const char *pDirectory, CString &rMessage)
 {
+	assert (pDirectory != 0);
 	assert (m_pFileManager != 0);
 
 	const char *pPartHeader;
@@ -291,15 +305,18 @@ void CWebServer::HandleUpload (CString &rMessage)
 			continue;
 		}
 
+		CString Path;
+		CFileManager::ConcatPath (Path, pDirectory, (const char *) FileName);
+
 		assert (pPartData != 0);
-		if (m_pFileManager->WriteFile ((const char *) FileName, pPartData, nPartLength))
+		if (m_pFileManager->WriteFile ((const char *) Path, pPartData, nPartLength))
 		{
 			rMessage.Format ("Uploaded file \"%s\" (%u bytes)",
-					 (const char *) FileName, nPartLength);
+					 (const char *) Path, nPartLength);
 		}
 		else
 		{
-			rMessage.Format ("Cannot write file \"%s\"", (const char *) FileName);
+			rMessage.Format ("Cannot write file \"%s\"", (const char *) Path);
 		}
 	}
 }
@@ -351,15 +368,17 @@ THTTPStatus CWebServer::ServeDownload (const char *pQuery, u8 *pBuffer, unsigned
 	return HTTPOK;
 }
 
-void CWebServer::BuildPage (CString &rString, const CString &rMessage)
+void CWebServer::BuildPage (CString &rString, const CString &rMessage, const char *pDirectory)
 {
+	assert (pDirectory != 0);
+
 	rString =
 		"<!DOCTYPE html>\n"
 		"<html>\n"
 		"<head>\n"
 		"<meta charset=\"utf-8\" />\n"
 		"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n"
-		"<title>Raspberry Pi GPIO &amp; SD Card Web Control</title>\n"
+		"<title>Raspberry Pi GPIO &amp; Storage Web Control</title>\n"
 		"<style>\n"
 		"body{font-family:helvetica,arial,sans-serif;font-size:14px;margin:20px;}\n"
 		"h1{font-size:20px;} h2{font-size:16px;margin-top:24px;}\n"
@@ -377,7 +396,7 @@ void CWebServer::BuildPage (CString &rString, const CString &rMessage)
 		"</style>\n"
 		"</head>\n"
 		"<body>\n"
-		"<h1>Raspberry Pi GPIO &amp; SD Card Web Control</h1>\n";
+		"<h1>Raspberry Pi GPIO &amp; Storage Web Control</h1>\n";
 
 	if (rMessage.GetLength () > 0)
 	{
@@ -392,7 +411,7 @@ void CWebServer::BuildPage (CString &rString, const CString &rMessage)
 	BuildHardwarePWMSection (rString);
 	BuildSoftPWMSection (rString);
 	BuildGPIOSection (rString);
-	BuildFileSection (rString);
+	BuildFileSection (rString, pDirectory);
 
 	// System section
 	rString.Append ("<h2>System</h2>\n");
@@ -633,19 +652,63 @@ void CWebServer::BuildGPIOSection (CString &rString)
 			"generator and ignores manual HIGH/LOW until that PWM is switched off.</p>\n");
 }
 
-void CWebServer::BuildFileSection (CString &rString)
+void CWebServer::BuildFileSection (CString &rString, const char *pDirectory)
 {
+	assert (pDirectory != 0);
 	assert (m_pFileManager != 0);
 
 	CString Line;
 
-	rString.Append ("<h2>SD card files</h2>\n");
+	rString.Append ("<h2>Files</h2>\n");
 
-	// Upload form (multipart POST)
-	rString.Append ("<form method=\"post\" action=\"/\" "
-			"enctype=\"multipart/form-data\">\n");
+	CString DirEncoded;
+	URLEncode (DirEncoded, pDirectory);
+
+	// Show the current directory and a link to its parent directory
+	CString DirEscaped;
+	HTMLEscape (DirEscaped, pDirectory);
+
+	Line.Format ("<p>Directory: <b>/%s</b>", (const char *) DirEscaped);
+	rString.Append (Line);
+
+	if (pDirectory[0] != '\0')
+	{
+		// cut off the last path component to get the parent directory
+		CString Parent = pDirectory;
+		const char *pLastSlash = 0;
+		for (const char *p = (const char *) Parent; *p != '\0'; p++)
+		{
+			if (*p == '/')
+			{
+				pLastSlash = p;
+			}
+		}
+
+		CString ParentPath;
+		if (pLastSlash != 0)
+		{
+			for (const char *p = (const char *) Parent; p < pLastSlash; p++)
+			{
+				ParentPath.Append (*p);
+			}
+		}
+
+		CString ParentEncoded;
+		URLEncode (ParentEncoded, (const char *) ParentPath);
+
+		Line.Format (" <a class=\"btn\" href=\"/?dir=%s\">Up</a>",
+			     (const char *) ParentEncoded);
+		rString.Append (Line);
+	}
+
+	rString.Append ("</p>\n");
+
+	// Upload form (multipart POST), uploads into the current directory
+	Line.Format ("<form method=\"post\" action=\"/?dir=%s\" "
+		     "enctype=\"multipart/form-data\">\n", (const char *) DirEncoded);
+	rString.Append (Line);
 	rString.Append ("<input type=\"file\" name=\"file\" />\n");
-	rString.Append ("<button type=\"submit\">Upload to SD card</button>\n");
+	rString.Append ("<button type=\"submit\">Upload to this directory</button>\n");
 	rString.Append ("</form>\n");
 
 	// File listing
@@ -657,16 +720,16 @@ void CWebServer::BuildFileSection (CString &rString)
 		return;
 	}
 
-	unsigned nCount = m_pFileManager->ListFiles (pEntries, MAX_FILE_ENTRIES);
+	unsigned nCount = m_pFileManager->ListFiles (pDirectory, pEntries, MAX_FILE_ENTRIES);
 
 	if (nCount == 0)
 	{
-		rString.Append ("<p>No files (or SD card not available).</p>\n");
+		rString.Append ("<p>Empty directory (or storage device not available).</p>\n");
 	}
 	else
 	{
 		rString.Append ("<table>\n");
-		rString.Append ("<tr><th>File</th><th>Size (bytes)</th>"
+		rString.Append ("<tr><th>Name</th><th>Size (bytes)</th>"
 				"<th>Download</th><th>Delete</th></tr>\n");
 
 		for (unsigned i = 0; i < nCount; i++)
@@ -674,16 +737,35 @@ void CWebServer::BuildFileSection (CString &rString)
 			CString Escaped;
 			HTMLEscape (Escaped, pEntries[i].Name);
 
-			CString Encoded;
-			URLEncode (Encoded, pEntries[i].Name);
+			CString Path;
+			CFileManager::ConcatPath (Path, pDirectory, pEntries[i].Name);
 
-			Line.Format ("<tr><td>%s</td><td>%u</td>"
-				     "<td><a class=\"btn\" href=\"/download?name=%s\">Download</a></td>"
-				     "<td><a class=\"btn del\" href=\"/?delete=%s\" "
-				     "onclick=\"return confirm('Delete this file?');\">Delete</a></td>"
-				     "</tr>\n",
-				     (const char *) Escaped, pEntries[i].nSize,
-				     (const char *) Encoded, (const char *) Encoded);
+			CString PathEncoded;
+			URLEncode (PathEncoded, (const char *) Path);
+
+			CString NameEncoded;
+			URLEncode (NameEncoded, pEntries[i].Name);
+
+			if (pEntries[i].bDirectory)
+			{
+				Line.Format ("<tr><td><a href=\"/?dir=%s\">%s/</a></td>"
+					     "<td>&mdash;</td><td>&mdash;</td><td>&mdash;</td>"
+					     "</tr>\n",
+					     (const char *) PathEncoded, (const char *) Escaped);
+			}
+			else
+			{
+				Line.Format ("<tr><td>%s</td><td>%u</td>"
+					     "<td><a class=\"btn\" href=\"/download?name=%s\">"
+					     "Download</a></td>"
+					     "<td><a class=\"btn del\" href=\"/?dir=%s&amp;delete=%s\" "
+					     "onclick=\"return confirm('Delete this file?');\">"
+					     "Delete</a></td></tr>\n",
+					     (const char *) Escaped, pEntries[i].nSize,
+					     (const char *) PathEncoded,
+					     (const char *) DirEncoded, (const char *) NameEncoded);
+			}
+
 			rString.Append (Line);
 		}
 
@@ -692,8 +774,9 @@ void CWebServer::BuildFileSection (CString &rString)
 
 	delete [] pEntries;
 
-	Line.Format ("<p class=\"small\">Only files in the root directory are shown. "
-		     "Downloads are limited to %u bytes.</p>\n", (unsigned) MAX_CONTENT_SIZE);
+	Line.Format ("<p class=\"small\">At most %u entries per directory are shown. "
+		     "Downloads are limited to %u bytes.</p>\n",
+		     (unsigned) MAX_FILE_ENTRIES, (unsigned) MAX_CONTENT_SIZE);
 	rString.Append (Line);
 }
 

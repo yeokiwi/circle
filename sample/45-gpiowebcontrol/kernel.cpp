@@ -40,7 +40,8 @@ CKernel::CKernel (void)
 #ifndef USE_DHCP
 	m_Net (IPAddress, NetMask, DefaultGateway, DNSServer),
 #endif
-	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED),
+	// use the on-board eMMC memory on a Compute Module 5, the SD card otherwise
+	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED, CEMMCDevice::GetDefaultDeviceForMachine ()),
 	m_GPIOController (&m_Interrupt),
 	m_bRebootRequested (FALSE)
 {
@@ -113,12 +114,19 @@ TShutdownMode CKernel::Run (void)
 {
 	m_Logger.Write (FromKernel, LogNotice, "Compile time: " __DATE__ " " __TIME__);
 
-	// Mount the SD card file system (a failure is not fatal: the GPIO and
-	// square wave features still work, only the file manager is unavailable).
+	// Mount the file system of the SD card or eMMC memory (a failure is not
+	// fatal: the GPIO and PWM features still work, only the file manager is
+	// unavailable).
 	if (!m_FileManager.Mount ())
 	{
 		m_Logger.Write (FromKernel, LogWarning,
-				"SD card could not be mounted, file manager disabled");
+				"Storage device could not be mounted, file manager disabled");
+	}
+	else
+	{
+		m_Logger.Write (FromKernel, LogNotice, "Mounted the file system on %s",
+				  CEMMCDevice::GetDefaultDeviceForMachine () == CEMMCDevice::EmbeddedMMC
+				? "the on-board eMMC memory" : "the SD card");
 	}
 
 	CString IPString;

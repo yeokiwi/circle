@@ -31,7 +31,7 @@ class CWebServer : public CHTTPDaemon
 public:
 	CWebServer (CNetSubSystem	*pNetSubSystem,
 		    CGPIOController	*pController,		// GPIO controller (shared)
-		    CFileManager	*pFileManager,		// SD card file manager (shared)
+		    CFileManager	*pFileManager,		// file manager (shared)
 		    volatile boolean	*pRebootRequested,	// set to request a reboot
 		    CSocket		*pSocket = 0);		// is 0 for 1st instance (listener)
 	~CWebServer (void);
@@ -49,21 +49,22 @@ public:
 
 private:
 	// handle GPIO/PWM/delete/reboot actions given in the query string
-	void HandleActions (const char *pQuery, CString &rMessage);
+	// (pDirectory is the directory currently shown in the file manager)
+	void HandleActions (const char *pQuery, const char *pDirectory, CString &rMessage);
 
 	// handle a file upload from multipart POST form data
-	void HandleUpload (CString &rMessage);
+	void HandleUpload (const char *pDirectory, CString &rMessage);
 
-	// serve a file from the SD card for download
+	// serve a file from the SD card or eMMC memory for download
 	THTTPStatus ServeDownload (const char *pQuery, u8 *pBuffer, unsigned *pLength,
 				   const char **ppContentType);
 
 	// build the complete HTML page into rString
-	void BuildPage (CString &rString, const CString &rMessage);
+	void BuildPage (CString &rString, const CString &rMessage, const char *pDirectory);
 	void BuildHardwarePWMSection (CString &rString);
 	void BuildSoftPWMSection (CString &rString);
 	void BuildGPIOSection (CString &rString);
-	void BuildFileSection (CString &rString);
+	void BuildFileSection (CString &rString, const char *pDirectory);
 
 	// extract an unsigned integer parameter from a query string
 	static boolean GetParam (const char *pQuery, const char *pName, unsigned *pValue);

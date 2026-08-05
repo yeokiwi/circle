@@ -398,6 +398,11 @@
 // USE_EMBEDDED_MMC_CM enables access to the on-board embedded MMC
 // memory on Compute Modules 3+ and 4. Does not work with SD card on
 // CM3+ Lite and CM4 Lite.
+//
+// This is not needed for the Compute Module 5, which is detected at
+// run-time by CEMMCDevice::GetDefaultDeviceForMachine(). Use that
+// method to select the device, if the same kernel image should support
+// the SD card of a Raspberry Pi 5 and the eMMC memory of a CM5.
 
 //#define USE_EMBEDDED_MMC_CM
 

@@ -78,6 +78,7 @@ Circle supports the following features:
 |                       | Platform DMA controller                             | DMA40 only     |
 |                       | RP1 platform DMA controller (Raspberry Pi 5 only)   | x              |
 |                       | EMMC SD card interface driver                       | x              |
+|                       | EMMC driver for on-board eMMC memory (CM3+, 4, 5)    | CM5            |
 |                       | SDHOST SD card interface driver (Raspberry Pi 1-3)  |                |
 |                       | PWM output (2 channels)                             | 4 channels     |
 |                       | PWM sound output (on headphone jack)                | with adapter   |
@@ -162,7 +163,7 @@ This table lists the support status for the different Raspberry Pi models. Not l
 | Compute Module 3+       | Reported to work | WLAN unknown                     |
 | Compute Module 4        | Tested           | WLAN unknown                     |
 | Compute Module 4S       | Unknown          |                                  |
-| Compute Module 5        | Reported to work | Unknown which devices work       |
+| Compute Module 5        | Reported to work | On-board eMMC memory supported   |
 | Compute Module Zero     | Reported to work |                                  |
 
 Build
