@@ -38,13 +38,13 @@
 #include <circle/util.h>
 #include <circle/macros.h>
 #include <circle/stdarg.h>
+#include <circle/machineinfo.h>
 #include <assert.h>
 #ifndef USE_SDHOST
 	#include <circle/bcm2835.h>
 	#include <circle/bcm2711.h>
 	#include <circle/bcmpropertytags.h>
 	#include <circle/synchronize.h>
-	#include <circle/machineinfo.h>
 	#include <circle/memio.h>
 	#include <circle/sched/scheduler.h>
 #else
@@ -701,6 +701,11 @@ boolean CEMMCDevice::Initialize (void)
 		return FALSE;
 	}
 #endif
+
+	LogWrite (LogNotice, "Initializing %s on %s",
+		    m_Device == EmbeddedMMC	? "on-board eMMC memory"
+		  : m_Device == SDCardExternal	? "external SD card" : "SD card",
+		  CMachineInfo::Get ()->GetMachineName ());
 
 	PeripheralEntry ();
 
@@ -1926,6 +1931,13 @@ int CEMMCDevice::CardReset (void)
 		return -1;
 	}
 
+	if (m_Device == EmbeddedMMC)
+	{
+		// An eMMC device may have been left in a high speed mode by the
+		// firmware. Give it some time to return to the default mode.
+		usDelay (2000);
+	}
+
 	int v2_later = -1;
 	if (m_Device != EmbeddedMMC)
 	{
@@ -2017,11 +2029,36 @@ int CEMMCDevice::CardReset (void)
 
 	if (!IssueCommand (m_Device == EmbeddedMMC ? SEND_OP_COND : ACMD(41), 0))
 	{
-		LogWrite (LogError, "Inquiry ACMD41 failed");
-		return -1;
+		if (m_Device == SDCardOnBoard)
+		{
+			// An eMMC device does not support ACMD41. This is probably
+			// the on-board eMMC memory of a Compute Module, which has
+			// not been detected from the machine model. Start over
+			// using the MMC protocol.
+			LogWrite (LogWarning, "No SD card found, trying the eMMC protocol");
+
+			m_Device = EmbeddedMMC;
+			m_sd_commands = emmc_commands;
+
+			return -3;
+		}
+
+		if (m_Device != EmbeddedMMC)
+		{
+			LogWrite (LogError, "Inquiry ACMD41 failed");
+
+			return -1;
+		}
+
+		// The inquiry CMD1 is not essential. The following loop retries it
+		// with the operation conditions set.
+		LogWrite (LogWarning, "Inquiry CMD1 failed");
 	}
 #ifdef EMMC_DEBUG2
-	LogWrite (LogDebug, "inquiry ACMD41 returned %08x", m_last_r0);
+	else
+	{
+		LogWrite (LogDebug, "inquiry ACMD41 returned %08x", m_last_r0);
+	}
 #endif
 
 	// Call initialization ACMD41 (CMD1 for eMMC devices). The eMMC device may
@@ -2733,6 +2770,16 @@ int CEMMCDevice::CardInit (void)
 	for (unsigned nTries = 3; nTries > 0; nTries--)
 	{
 		ret = CardReset ();
+
+		// The driver switched from the SD card to the eMMC protocol.
+		// Start over, without counting this as a failed try.
+		if (ret == -3)
+		{
+			nTries++;
+
+			continue;
+		}
+
 		if (ret != -2)
 		{
 			break;
