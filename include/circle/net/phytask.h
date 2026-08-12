@@ -26,7 +26,7 @@
 class CPHYTask : public CTask
 {
 public:
-	CPHYTask (CNetDevice *pDevice);
+	CPHYTask (CNetDevice *pDevice, unsigned nDeviceIndex = 0);
 	~CPHYTask (void);
 
 	void Run (void);

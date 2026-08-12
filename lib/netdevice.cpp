@@ -18,6 +18,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include <circle/netdevice.h>
+#include <circle/bcm54213.h>
+#include <circle/macb.h>
 
 const char *CNetDevice::s_SpeedString[NetDeviceSpeedUnknown] =
 {
@@ -63,6 +65,11 @@ CNetDevice *CNetDevice::GetNetDevice (unsigned nDeviceNumber)
 
 CNetDevice *CNetDevice::GetNetDevice (TNetDeviceType Type)
 {
+	return GetNetDevice (Type, 0);
+}
+
+CNetDevice *CNetDevice::GetNetDevice (TNetDeviceType Type, unsigned nIndex)
+{
 	for (unsigned nDeviceNumber = 0; nDeviceNumber < s_nDeviceNumber; nDeviceNumber++)
 	{
 		CNetDevice *pDevice = s_pDevice[nDeviceNumber];
@@ -74,9 +81,47 @@ CNetDevice *CNetDevice::GetNetDevice (TNetDeviceType Type)
 		if (   Type == NetDeviceTypeAny
 		    || pDevice->GetType () == Type)
 		{
-			return pDevice;
+			if (nIndex-- == 0)
+			{
+				return pDevice;
+			}
 		}
 	}
 
 	return 0;
+}
+
+unsigned CNetDevice::GetNumNetDevices (void)
+{
+	return s_nDeviceNumber;
+}
+
+boolean CNetDevice::InitializeOnBoardDevice (void)
+{
+	// The on-board net device is a system-wide resource, which must be initialized only
+	// once, even if multiple CNetDeviceLayer instances are used. On the models, which do
+	// not have a dedicated on-board driver, the device is a USB device and is registered,
+	// while the USB host controller is initialized.
+#if RASPPI == 4 || RASPPI >= 5
+	static boolean s_bInitialized = FALSE;
+	if (s_bInitialized)
+	{
+		return TRUE;
+	}
+
+#if RASPPI == 4
+	static CBcm54213Device s_Device;
+#else
+	static CMACBDevice s_Device;
+#endif
+
+	if (!s_Device.Initialize ())
+	{
+		return FALSE;
+	}
+
+	s_bInitialized = TRUE;
+#endif
+
+	return TRUE;
 }

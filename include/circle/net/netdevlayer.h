@@ -24,14 +24,16 @@
 #include <circle/netdevice.h>
 #include <circle/net/netbuffer.h>
 #include <circle/net/netbufferqueue.h>
-#include <circle/bcm54213.h>
-#include <circle/macb.h>
 #include <circle/types.h>
 
 class CNetDeviceLayer
 {
 public:
-	CNetDeviceLayer (CNetConfig *pNetConfig, TNetDeviceType DeviceType);
+	/// \param pNetConfig    Pointer to the network configuration
+	/// \param DeviceType    Type of the net device to be used
+	/// \param nDeviceIndex  Zero-based index of the device within the devices of this type
+	CNetDeviceLayer (CNetConfig *pNetConfig, TNetDeviceType DeviceType,
+			 unsigned nDeviceIndex = 0);
 	~CNetDeviceLayer (void);
 
 	boolean Initialize (boolean bWaitForActivate);
@@ -51,6 +53,7 @@ public:
 
 private:
 	TNetDeviceType m_DeviceType;
+	unsigned m_nDeviceIndex;
 	CNetConfig *m_pNetConfig;
 	CNetDevice *m_pDevice;
 
@@ -58,12 +61,6 @@ private:
 	CNetBufferQueue m_RxQueue;
 
 	CNetBuffer *m_pRxBuffer;
-
-#if RASPPI == 4
-	CBcm54213Device m_Bcm54213;
-#elif RASPPI >= 5
-	CMACBDevice m_MACB;
-#endif
 };
 
 #endif

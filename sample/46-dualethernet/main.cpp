@@ -1,8 +1,8 @@
 //
-// phytask.h
+// main.c
 //
 // Circle - A C++ bare metal environment for Raspberry Pi
-// Copyright (C) 2019-2021  R. Stange <rsta2@o2online.de>
+// Copyright (C) 2014  R. Stange <rsta2@o2online.de>
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,35 +17,31 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-#include <circle/net/phytask.h>
-#include <circle/sched/scheduler.h>
-#include <circle/string.h>
-#include <assert.h>
+#include "kernel.h"
+#include <circle/startup.h>
 
-CPHYTask::CPHYTask (CNetDevice *pDevice, unsigned nDeviceIndex)
-:	m_pDevice (pDevice)
+int main (void)
 {
-	CString Name;
-	Name.Format ("netphy%u", nDeviceIndex);
+	// cannot return here because some destructors used in CKernel are not implemented
 
-	SetName (Name);
-}
-
-CPHYTask::~CPHYTask (void)
-{
-	m_pDevice = 0;
-}
-
-void CPHYTask::Run (void)
-{
-	while (1)
+	CKernel Kernel;
+	if (!Kernel.Initialize ())
 	{
-		assert (m_pDevice != 0);
-		if (!m_pDevice->UpdatePHY ())
-		{
-			return;
-		}
+		halt ();
+		return EXIT_HALT;
+	}
+	
+	TShutdownMode ShutdownMode = Kernel.Run ();
 
-		CScheduler::Get ()->MsSleep (2000);
+	switch (ShutdownMode)
+	{
+	case ShutdownReboot:
+		reboot ();
+		return EXIT_REBOOT;
+
+	case ShutdownHalt:
+	default:
+		halt ();
+		return EXIT_HALT;
 	}
 }

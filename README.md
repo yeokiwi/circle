@@ -104,7 +104,7 @@ Circle supports the following features:
 |                       | HID class device drivers (keyboard, mouse, gamepad) | x              |
 |                       | Driver for on-board Ethernet device (SMSC951x)      |                |
 |                       | Driver for on-board Ethernet device (LAN7800)       |                |
-|                       | Driver for CDC Ethernet devices (RTL815x, QEMU)     |                |
+|                       | Driver for CDC Ethernet devices (RTL815x, QEMU)     | x              |
 |                       | Driver for USB mass storage devices (bulk only)     | x              |
 |                       | Driver for USB floppy disk devices (experimental)   | x              |
 |                       | Driver for USB audio streaming devices (RPi 4 only) | x              |
@@ -123,6 +123,7 @@ Circle supports the following features:
 |                       | Clients: DHCP, DNS, NTP, HTTP, Syslog, MQTT, mDNS   | x              |
 |                       | Servers: HTTP, TFTP                                 | x              |
 |                       | BSD-like C++ socket API                             | x              |
+|                       | Multiple independent stacks (one per net device)    | x              |
 |                       |                                                     |                |
 | Graphics              | OpenGL ES 1.1 and 2.0, OpenVG 1.1, EGL 1.4          |                |
 |                       | (not on Raspberry Pi 4)                             |                |
@@ -289,6 +290,7 @@ Additional Topics
 * [Serial bootloader support](doc/bootloader.txt)
 * [Multi-core support](doc/multicore.txt)
 * [USB plug-and-play](doc/usb-plug-and-play.txt)
+* [Multiple net devices and TCP/IP stacks](doc/multiple-net-devices.txt)
 * [Debugging support](doc/debug.txt)
 * [JTAG debugging](doc/debug-jtag.txt)
 * [SWD debugging (Raspberry Pi 5)](doc/debug-swd.txt)

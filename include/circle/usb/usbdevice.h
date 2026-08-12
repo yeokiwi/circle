@@ -99,6 +99,12 @@ protected:
 	void SetAddress (u8 ucAddress);		// xHCI: set slot ID
 
 private:
+#ifndef EXCLUDE_USB_NET
+	// returns the index of the configuration, which provides a CDC Ethernet (ECM)
+	// interface, or DESCRIPTOR_INDEX_DEFAULT, if there is none
+	u8 FindCDCEthernetConfiguration (void);
+#endif
+
 #if RASPPI >= 4
 	static u32 AppendPortToRouteString (u32 nRouteString, unsigned nPort);
 #endif

@@ -101,6 +101,25 @@ public:
 	/// \return Pointer to the first device object of this type
 	static CNetDevice *GetNetDevice (TNetDeviceType Type);
 
+	/// \param Type Specific net device type to search for (or NetDeviceTypeAny)
+	/// \param nIndex Zero-based index of the device within the devices of this type
+	/// \return Pointer to the device object (0 if not available)
+	/// \note The registration order depends on the initialization order of the drivers.\n
+	///	  Because USB devices are normally registered, while the USB host controller is\n
+	///	  initialized, a USB net device may have a smaller index than an on-board device.
+	static CNetDevice *GetNetDevice (TNetDeviceType Type, unsigned nIndex);
+
+	/// \return Number of registered net devices (of all types)
+	static unsigned GetNumNetDevices (void);
+
+	/// \brief Initialize the on-board net device of this Raspberry Pi model
+	/// \return TRUE on success (also, if the model has no dedicated on-board driver)
+	/// \note This is called automatically by CNetDeviceLayer and does nothing, when the
+	///	  device has been initialized before. Call it explicitly before initializing\n
+	///	  the USB host controller, if the on-board device should be registered as net\n
+	///	  device number 0, when an additional USB net device is used.
+	static boolean InitializeOnBoardDevice (void);
+
 protected:
 	void AddNetDevice (void);
 

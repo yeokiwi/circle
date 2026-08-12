@@ -19,12 +19,18 @@
 //
 #include <circle/net/nettask.h>
 #include <circle/sched/scheduler.h>
+#include <circle/string.h>
 #include <assert.h>
 
 CNetTask::CNetTask (CNetSubSystem *pNetSubSystem)
 :	m_pNetSubSystem (pNetSubSystem)
 {
-	SetName ("net");
+	assert (m_pNetSubSystem != 0);
+
+	CString Name;
+	Name.Format ("net%u", m_pNetSubSystem->GetInstance ());
+
+	SetName (Name);
 }
 
 CNetTask::~CNetTask (void)

@@ -23,20 +23,37 @@
 #include <circle/sched/scheduler.h>
 #include <assert.h>
 
-CNetSubSystem *CNetSubSystem::s_pThis = 0;
+CNetSubSystem *CNetSubSystem::s_pThis[MAX_NET_SUBSYSTEMS] = {0};
+unsigned CNetSubSystem::s_nInstances = 0;
 
 CNetSubSystem::CNetSubSystem (const u8 *pIPAddress, const u8 *pNetMask, const u8 *pDefaultGateway,
-			      const u8 *pDNSServer, const char *pHostname, TNetDeviceType DeviceType)
+			      const u8 *pDNSServer, const char *pHostname, TNetDeviceType DeviceType,
+			      unsigned nDeviceIndex)
 :	m_Hostname (pHostname != 0 ? pHostname : ""),
-	m_NetDevLayer (&m_Config, DeviceType),
+	m_nInstance (MAX_NET_SUBSYSTEMS),
+	m_NetDevLayer (&m_Config, DeviceType, nDeviceIndex),
 	m_LinkLayer (&m_Config, &m_NetDevLayer),
 	m_NetworkLayer (&m_Config, &m_LinkLayer),
 	m_TransportLayer (&m_Config, &m_NetworkLayer),
 	m_bUseDHCP (pIPAddress == 0 ? TRUE : FALSE),
 	m_pDHCPClient (0)
 {
-	assert (s_pThis == 0);
-	s_pThis = this;
+	for (unsigned nInstance = 0; nInstance < MAX_NET_SUBSYSTEMS; nInstance++)
+	{
+		if (s_pThis[nInstance] == 0)
+		{
+			m_nInstance = nInstance;
+			s_pThis[nInstance] = this;
+
+			if (s_nInstances <= nInstance)
+			{
+				s_nInstances = nInstance+1;
+			}
+
+			break;
+		}
+	}
+	assert (m_nInstance < MAX_NET_SUBSYSTEMS);
 
 	m_Config.SetDHCP (m_bUseDHCP);
 
@@ -59,7 +76,14 @@ CNetSubSystem::CNetSubSystem (const u8 *pIPAddress, const u8 *pNetMask, const u8
 
 CNetSubSystem::~CNetSubSystem (void)
 {
-	s_pThis = 0;
+	assert (m_nInstance < MAX_NET_SUBSYSTEMS);
+	s_pThis[m_nInstance] = 0;
+
+	while (   s_nInstances > 0
+	       && s_pThis[s_nInstances-1] == 0)
+	{
+		s_nInstances--;
+	}
 }
 
 boolean CNetSubSystem::Initialize (boolean bWaitForActivate)
@@ -106,7 +130,8 @@ boolean CNetSubSystem::Initialize (boolean bWaitForActivate)
 
 void CNetSubSystem::Process (void)
 {
-	if (s_pThis == 0)
+	if (   m_nInstance >= MAX_NET_SUBSYSTEMS
+	    || s_pThis[m_nInstance] != this)	// destructor has been called
 	{
 		return;
 	}
@@ -178,8 +203,28 @@ const char *CNetSubSystem::GetHostname (void) const
 	return m_Hostname;
 }
 
+unsigned CNetSubSystem::GetInstance (void) const
+{
+	return m_nInstance;
+}
+
 CNetSubSystem *CNetSubSystem::Get (void)
 {
-	assert (s_pThis != 0);
-	return s_pThis;
+	assert (s_pThis[0] != 0);
+	return s_pThis[0];
+}
+
+CNetSubSystem *CNetSubSystem::Get (unsigned nInstance)
+{
+	if (nInstance >= MAX_NET_SUBSYSTEMS)
+	{
+		return 0;
+	}
+
+	return s_pThis[nInstance];
+}
+
+unsigned CNetSubSystem::GetInstanceCount (void)
+{
+	return s_nInstances;
 }

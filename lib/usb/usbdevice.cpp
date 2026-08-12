@@ -264,16 +264,10 @@ boolean CUSBDevice::Initialize (void)
 	u8 ucConfigIndex = DESCRIPTOR_INDEX_DEFAULT;
 
 #ifndef EXCLUDE_USB_NET
-	// special support for CDC Ethernet devices
-	if (   (   m_pDeviceDesc->idVendor  == 0x0525	// NetChip
-	        && m_pDeviceDesc->idProduct == 0xA4A2)	// Ethernet/RNDIS Gadget (QEMU)
-	    || (   m_pDeviceDesc->idVendor  == 0x0BDA	// Realtek
-	        && m_pDeviceDesc->idProduct == 0x8152)	// RTL8152
-	    || (   m_pDeviceDesc->idVendor  == 0x0BDA	// Realtek
-	        && m_pDeviceDesc->idProduct == 0x8153))	// RTL8153
-	{
-		ucConfigIndex++;
-	}
+	// Many USB Ethernet devices (e.g. the RTL815x family and the QEMU Ethernet gadget)
+	// expose a vendor specific interface in their default configuration and the CDC
+	// Ethernet (ECM) interface, which we support, in an additional one.
+	ucConfigIndex = FindCDCEthernetConfiguration ();
 #endif
 
 	if (m_pHost->GetDescriptor (m_pEndpoint0,
@@ -495,6 +489,107 @@ boolean CUSBDevice::Initialize (void)
 
 	return TRUE;
 }
+
+#ifndef EXCLUDE_USB_NET
+
+u8 CUSBDevice::FindCDCEthernetConfiguration (void)
+{
+	assert (m_pHost != 0);
+	assert (m_pEndpoint0 != 0);
+	assert (m_pDeviceDesc != 0);
+
+	// devices with a single configuration are never affected
+	if (m_pDeviceDesc->bNumConfigurations <= 1)
+	{
+		return DESCRIPTOR_INDEX_DEFAULT;
+	}
+
+	boolean bNCMFound = FALSE;
+
+	for (u8 ucConfigIndex = 0; ucConfigIndex < m_pDeviceDesc->bNumConfigurations; ucConfigIndex++)
+	{
+		TUSBConfigurationDescriptor ConfigDescHeader;
+		if (m_pHost->GetDescriptor (m_pEndpoint0,
+					    DESCRIPTOR_CONFIGURATION, ucConfigIndex,
+					    &ConfigDescHeader, sizeof ConfigDescHeader)
+		    != (int) sizeof ConfigDescHeader)
+		{
+			continue;
+		}
+
+		if (   ConfigDescHeader.bLength         != sizeof ConfigDescHeader
+		    || ConfigDescHeader.bDescriptorType != DESCRIPTOR_CONFIGURATION
+		    || ConfigDescHeader.wTotalLength    >  MAX_CONFIG_DESC_SIZE)
+		{
+			continue;
+		}
+
+		unsigned nTotalLength = ConfigDescHeader.wTotalLength;
+
+		u8 *pBuffer = new u8[nTotalLength];
+		assert (pBuffer != 0);
+
+		boolean bFound = FALSE;
+
+		if (m_pHost->GetDescriptor (m_pEndpoint0,
+					    DESCRIPTOR_CONFIGURATION, ucConfigIndex,
+					    pBuffer, nTotalLength)
+		    == (int) nTotalLength)
+		{
+			CUSBConfigurationParser Parser (pBuffer, nTotalLength);
+
+			if (Parser.IsValid ())
+			{
+				const TUSBInterfaceDescriptor *pInterfaceDesc;
+				while (   !bFound
+				       && (pInterfaceDesc = (TUSBInterfaceDescriptor *)
+						Parser.GetDescriptor (DESCRIPTOR_INTERFACE)) != 0)
+				{
+					if (pInterfaceDesc->bInterfaceClass != 0x02)	// Communication
+					{
+						continue;
+					}
+
+					switch (pInterfaceDesc->bInterfaceSubClass)
+					{
+					case 0x06:			// Ethernet Networking (ECM)
+						bFound = TRUE;
+						break;
+
+					case 0x0D:			// Network Control Model (NCM)
+						bNCMFound = TRUE;
+						break;
+
+					default:
+						break;
+					}
+				}
+			}
+		}
+
+		delete [] pBuffer;
+
+		if (bFound)
+		{
+			if (ucConfigIndex != DESCRIPTOR_INDEX_DEFAULT)
+			{
+				LogWrite (LogDebug, "Selecting CDC Ethernet configuration %u",
+					  (unsigned) ucConfigIndex);
+			}
+
+			return ucConfigIndex;
+		}
+	}
+
+	if (bNCMFound)
+	{
+		LogWrite (LogWarning, "Device supports CDC NCM only, which is not implemented");
+	}
+
+	return DESCRIPTOR_INDEX_DEFAULT;
+}
+
+#endif
 
 boolean CUSBDevice::Configure (void)
 {

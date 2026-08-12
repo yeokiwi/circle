@@ -1,0 +1,98 @@
+MULTIPLE NET DEVICES
+
+Circle is able to manage multiple net devices (network interface controllers) in
+one application, for instance the on-board Ethernet controller of a Raspberry Pi
+together with an additional USB Ethernet device. This is used to add a second
+Ethernet port to a Raspberry Pi (e.g. Compute Module 5), which has only one
+on-board port.
+
+This document describes how the net devices are numbered and how an application
+can run multiple independent TCP/IP stacks, one on each net device.
+
+
+NET DEVICE NUMBERING
+
+Each net device driver registers its device with the class CNetDevice, when it
+has been initialized. The devices are numbered in the order of their
+registration, starting with 0. A registered device can be requested with:
+
+	CNetDevice *CNetDevice::GetNetDevice (unsigned nDeviceNumber);
+	CNetDevice *CNetDevice::GetNetDevice (TNetDeviceType Type, unsigned nIndex = 0);
+	unsigned    CNetDevice::GetNumNetDevices (void);
+
+The first method returns the device with the given number (over all device
+types). The second method returns the nIndex-th device of the given type (for
+example NetDeviceTypeEthernet or NetDeviceTypeWLAN). The maximum number of net
+devices is defined as MAX_NET_DEVICES in <circle/netdevice.h>.
+
+Because USB devices are detected, while the USB host controller is initialized,
+a USB Ethernet device is normally registered before the on-board Ethernet
+device of the Raspberry Pi 4, 5 or CM5, which is initialized together with the
+network subsystem. If your application depends on a specific numbering, it
+should initialize the on-board device explicitly, before the USB host
+controller is initialized:
+
+	CNetDevice::InitializeOnBoardDevice ();
+
+This method does nothing on the Raspberry Pi models without a dedicated
+on-board Ethernet driver (there the on-board device is a USB device too) and
+does nothing, if the device has been initialized before. It is called
+automatically by the network subsystem, so an application, which does not care
+about the numbering, does not have to call it.
+
+
+MULTIPLE TCP/IP STACKS
+
+An application can create multiple instances of the class CNetSubSystem, each
+of them bound to its own net device. The net device is selected with the last
+two parameters of the constructor:
+
+	CNetSubSystem (const u8 *pIPAddress	 = 0,	// use DHCP if pIPAddress == 0
+		       const u8 *pNetMask	 = 0,
+		       const u8 *pDefaultGateway = 0,
+		       const u8 *pDNSServer	 = 0,
+		       const char *pHostname	 = DEFAULT_HOSTNAME,
+		       TNetDeviceType DeviceType = NetDeviceTypeEthernet,
+		       unsigned nDeviceIndex	 = 0);
+
+nDeviceIndex is the zero-based index of the net device within the devices of
+DeviceType. The maximum number of instances is MAX_NET_SUBSYSTEMS.
+
+Each instance has its own IP configuration (CNetConfig), its own DHCP client,
+its own ARP cache, routing and sockets. A socket belongs to the instance, which
+is given to the constructor of the class CSocket. There is no routing or
+bridging between the instances.
+
+The instances can be accessed with:
+
+	CNetSubSystem *CNetSubSystem::Get (void);		// first instance
+	CNetSubSystem *CNetSubSystem::Get (unsigned nInstance);
+	unsigned       CNetSubSystem::GetInstanceCount (void);
+	unsigned       CNetSubSystem::GetInstance (void) const;
+
+CNetSubSystem::Get() without parameter returns the first instance. It is used
+by classes, which support only one network subsystem, for example CmDNSDaemon.
+
+Each instance runs its own network task, named "net0", "net1" and so on, and
+one PHY task per net device, named "netphy0", "netphy1" and so on.
+
+Please note that the maximum number of simultaneous TCP connections
+(TCP_MAX_CONNECTIONS) is a system-wide limit, which is shared by all instances.
+
+See sample/46-dualethernet for a demonstration.
+
+
+USB ETHERNET DEVICES
+
+Circle supports USB Ethernet devices, which provide a CDC Ethernet (ECM)
+interface, beside the on-board devices SMSC951x and LAN7800. Many devices, for
+instance those based on the Realtek RTL815x chips, expose a vendor specific
+interface in their default USB configuration and the CDC Ethernet interface in
+an additional configuration. Circle automatically selects the configuration,
+which provides the CDC Ethernet interface.
+
+Devices, which support the CDC NCM protocol only, are not supported. A warning
+is written to the log in this case.
+
+On the Raspberry Pi 5 a USB Ethernet device has to be attached to a root port
+directly, because USB 3 hubs are not supported.

@@ -28,8 +28,10 @@
 
 const char FromNetDev[] = "netdev";
 
-CNetDeviceLayer::CNetDeviceLayer (CNetConfig *pNetConfig, TNetDeviceType DeviceType)
+CNetDeviceLayer::CNetDeviceLayer (CNetConfig *pNetConfig, TNetDeviceType DeviceType,
+				  unsigned nDeviceIndex)
 :	m_DeviceType (DeviceType),
+	m_nDeviceIndex (nDeviceIndex),
 	m_pNetConfig (pNetConfig),
 	m_pDevice (0),
 	m_TxQueue (TRUE),
@@ -48,17 +50,10 @@ CNetDeviceLayer::~CNetDeviceLayer (void)
 
 boolean CNetDeviceLayer::Initialize (boolean bWaitForActivate)
 {
-#if RASPPI == 4
-	if (!m_Bcm54213.Initialize ())
+	if (!CNetDevice::InitializeOnBoardDevice ())
 	{
 		return FALSE;
 	}
-#elif RASPPI >= 5
-	if (!m_MACB.Initialize ())
-	{
-		return FALSE;
-	}
-#endif
 
 	if (!bWaitForActivate)
 	{
@@ -66,7 +61,7 @@ boolean CNetDeviceLayer::Initialize (boolean bWaitForActivate)
 	}
 
 	assert (m_pDevice == 0);
-	m_pDevice = CNetDevice::GetNetDevice (m_DeviceType);
+	m_pDevice = CNetDevice::GetNetDevice (m_DeviceType, m_nDeviceIndex);
 	if (m_pDevice == 0)
 	{
 		CLogger::Get ()->Write (FromNetDev, LogError, "Net device not available");
@@ -74,7 +69,7 @@ boolean CNetDeviceLayer::Initialize (boolean bWaitForActivate)
 		return FALSE;
 	}
 
-	new CPHYTask (m_pDevice);
+	new CPHYTask (m_pDevice, m_nDeviceIndex);
 
 	// wait for Ethernet PHY to come up
 	unsigned nStartTicks = CTimer::Get ()->GetTicks ();
@@ -103,13 +98,13 @@ void CNetDeviceLayer::Process (void)
 {
 	if (m_pDevice == 0)
 	{
-		m_pDevice = CNetDevice::GetNetDevice (m_DeviceType);
+		m_pDevice = CNetDevice::GetNetDevice (m_DeviceType, m_nDeviceIndex);
 		if (m_pDevice == 0)
 		{
 			return;
 		}
 
-		new CPHYTask (m_pDevice);
+		new CPHYTask (m_pDevice, m_nDeviceIndex);
 	}
 
 	DMA_BUFFER (u8, Buffer, FRAME_BUFFER_SIZE);

@@ -1,0 +1,37 @@
+README
+
+This sample program demonstrates the use of two independent TCP/IP stacks in
+one application, each bound to its own Ethernet device. It has been written for
+the Compute Module 5, which provides one on-board Ethernet port, extended with
+a second port using a USB Ethernet device, but works on any Raspberry Pi model
+with two available net devices.
+
+Required hardware:
+
+	* A Raspberry Pi with an on-board Ethernet controller (e.g. CM5)
+	* A USB Ethernet device with a CDC Ethernet (ECM) interface, for
+	  instance based on a Realtek RTL815x chip. On the Raspberry Pi 5 it
+	  has to be attached to a root port directly, because USB 3 hubs are
+	  not supported.
+	* Both ports connected to a network with a DHCP server
+
+The sample creates two CNetSubSystem instances. The first one is bound to net
+device 0, the second one to net device 1. The on-board Ethernet device is
+initialized before the USB host controller (see CKernel::Initialize()), so that
+it is registered as net device 0 and the USB Ethernet device becomes net device
+1. Without this explicit call the USB device would be registered first, because
+USB devices are detected, while the USB host controller is initialized.
+
+Both stacks are initialized with the parameter FALSE, so that neither of them
+waits for its network to come up. This way a port with a down link does not
+block the other one.
+
+Each stack requests its own DHCP lease and has its own IP configuration,
+routing and sockets. Every five seconds the MAC address and the currently
+assigned IP address of both stacks is written to the log. Both IP addresses can
+be pinged from another host on the network at the same time. When you unplug
+one of the network cables, the other stack continues to work.
+
+Please note that a socket always belongs to exactly one CNetSubSystem instance,
+which is specified when the socket is created. There is no routing between the
+two stacks.
