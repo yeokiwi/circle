@@ -46,4 +46,12 @@ INCLUDE	+= -I . -I include -I $(SOEMHOME)/include -I $(SOEMHOME)/osal
 # function of the C library, which is not linked into Circle applications.
 DEFINE	+= -U_FORTIFY_SOURCE
 
+# Build with "make EC_DEBUG=1" to write the internal debug messages of SOEM to
+# the Circle system log (with the log level LogDebug).
+EC_DEBUG ?= 0
+
+ifeq ($(strip $(EC_DEBUG)),1)
+DEFINE	+= -DEC_DEBUG
+endif
+
 -include $(DEPS)

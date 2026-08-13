@@ -114,6 +114,67 @@ ETHERCAT_IOMAP_SIZE). The maximum number of slaves on the bus is defined as
 EC_MAXSLAVE in addon/soem/include/soem/ec_options.h.
 
 
+DEBUG OUTPUT
+
+The debug messages (the Circle system log) are written to the serial interface,
+so that the application can be troubleshooted, while it is running. On the
+Raspberry Pi 5 the dedicated 3-pin UART connector is used, which is served by
+uart10 (serial device 10 in Circle, "ttyS11"). On the other Raspberry Pi models
+the UART on GPIO14/15 is used. The settings are 115200 baud, 8 data bits, no
+parity, 1 stop bit and are defined in kernel.h (SERIAL_DEVICE_NUMBER and
+SERIAL_BAUD_RATE).
+
+Connect a serial USB adapter (3.3V level) or a Raspberry Pi Debug Probe to the
+UART connector and open a terminal program (e.g. putty, minicom or "screen
+/dev/ttyUSB0 115200") on your development machine. The pinout of the connector
+is described here:
+
+	https://datasheets.raspberrypi.com/debug/debug-connector-specification.pdf
+
+Do not set "enable_jtag_gpio=1" in config.txt, because this switches the UART
+connector to the SWD debug function (see doc/debug-swd.txt).
+
+The following options can be added to cmdline.txt on the SD card:
+
+	loglevel=4	log level: 0 (panic) to 4 (debug, this is the default)
+	logtarget=tty1	write the log messages to the screen (HDMI) instead
+	logtarget=ttyS11 write them to the UART connector (this is the default)
+
+The Circle option "logdev=" is not used by this sample, because it defaults to
+the screen ("tty1"). The application option "logtarget=" is used instead, so
+that the messages go to the serial interface, if nothing is specified.
+
+The output looks like this:
+
+	00:00:02.14 kernel: Compile time: Aug 13 2026 09:12:33
+	00:00:02.14 kernel: Debug messages go to the UART connector (uart10) at 115200 baud
+	00:00:02.14 kernel: 2 net device(s) available
+	00:00:02.15 ethercat: EtherCAT master starting on eth0 (cycle time 4000 us)
+	00:00:02.31 ethercat: 3 slave(s) found
+	00:00:03.02 ethercat: Process data mapped: 1 byte(s) out, 2 byte(s) in, expected WKC 5
+	00:00:03.24 ethercat: All slaves are operational
+	00:00:12.15 kernel: Open "http://192.168.1.42/" in your web browser
+	00:00:12.15 kernel: EtherCAT: OPERATIONAL, 3 slave(s), WKC 5 of 5, 2412 cycle(s)
+
+The serial driver is used in interrupt driven mode here, so that writing a
+message does not stall the EtherCAT cycle, until the characters have been sent
+(this would take about 9 ms for a 100 character message at 115200 baud). The
+messages are buffered instead. If a lot of messages is written in a short time,
+the transmit buffer may overflow and messages may get lost. Increase the baud
+rate or the system option SERIAL_BUF_SIZE (see include/circle/sysconfig.h) in
+this case.
+
+To see the internal debug messages of SOEM too (which show the EtherCAT
+datagrams, which are exchanged, while the bus is scanned), build the SOEM
+library with:
+
+	cd addon/soem
+	make clean
+	make EC_DEBUG=1
+
+These messages are written with the log level LogDebug and are very verbose.
+
+
 NOTES
 
 The scheduler of Circle is cooperative and non-preemptive. The EtherCAT task

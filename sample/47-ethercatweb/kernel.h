@@ -45,6 +45,18 @@
 // Process data cycle time in microseconds
 #define ETHERCAT_CYCLE_TIME_US	4000
 
+// The debug messages are written to this serial device. The Raspberry Pi 5 has
+// a dedicated UART connector (the 3-pin JST connector), which is served by
+// uart10 and is the serial device 10 in Circle. Other models use the UART on
+// GPIO14/15. This can be overwritten with "logdev=" in cmdline.txt.
+#if RASPPI >= 5
+#define SERIAL_DEVICE_NUMBER	10
+#else
+#define SERIAL_DEVICE_NUMBER	0
+#endif
+
+#define SERIAL_BAUD_RATE	115200
+
 enum TShutdownMode
 {
 	ShutdownNone,
@@ -71,10 +83,10 @@ private:
 	CKernelOptions		m_Options;
 	CDeviceNameService	m_DeviceNameService;
 	CCPUThrottle		m_CPUThrottle;
-	CScreenDevice		m_Screen;
-	CSerialDevice		m_Serial;
 	CExceptionHandler	m_ExceptionHandler;
 	CInterruptSystem	m_Interrupt;
+	CScreenDevice		m_Screen;
+	CSerialDevice		m_Serial;		// debug messages go here
 	CTimer			m_Timer;
 	CLogger			m_Logger;
 	CUSBHCIDevice		m_USBHCI;

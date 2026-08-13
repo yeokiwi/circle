@@ -29,6 +29,9 @@ static const char FromKernel[] = "kernel";
 
 CKernel::CKernel (void)
 :	m_Screen (m_Options.GetWidth (), m_Options.GetHeight ()),
+	// The interrupt driven serial driver is used, so that writing a debug
+	// message does not stall the EtherCAT cycle, until it has been sent.
+	m_Serial (&m_Interrupt, FALSE, SERIAL_DEVICE_NUMBER),
 	m_Timer (&m_Interrupt),
 	m_Logger (m_Options.GetLogLevel (), &m_Timer),
 	m_USBHCI (&m_Interrupt, &m_Timer),
@@ -47,30 +50,57 @@ boolean CKernel::Initialize (void)
 {
 	boolean bOK = TRUE;
 
-	if (bOK)
-	{
-		bOK = m_Screen.Initialize ();
-	}
-
-	if (bOK)
-	{
-		bOK = m_Serial.Initialize (115200);
-	}
-
-	if (bOK)
-	{
-		CDevice *pTarget = m_DeviceNameService.GetDevice (m_Options.GetLogDevice (), FALSE);
-		if (pTarget == 0)
-		{
-			pTarget = &m_Screen;
-		}
-
-		bOK = m_Logger.Initialize (pTarget);
-	}
-
+	// the interrupt system is initialized first, because the serial device
+	// uses interrupts
 	if (bOK)
 	{
 		bOK = m_Interrupt.Initialize ();
+	}
+
+	if (bOK)
+	{
+		// A screen is not required for this application, which is normally
+		// used headless. A failure is not fatal here, because the debug
+		// messages go to the serial interface.
+		m_Screen.Initialize ();
+	}
+
+	if (bOK)
+	{
+		bOK = m_Serial.Initialize (SERIAL_BAUD_RATE);
+	}
+
+	if (bOK)
+	{
+		// The debug messages are written to the serial interface. The option
+		// "logdev=" is not used here, because it defaults to "tty1", which
+		// would send the messages to the screen. The application option
+		// "logtarget=" in cmdline.txt selects another device instead
+		// (e.g. "logtarget=tty1" for the screen).
+		const char *pLogTarget = m_Options.GetAppOptionString ("logtarget");
+
+		CDevice *pTarget = 0;
+		if (pLogTarget != 0)
+		{
+			pTarget = m_DeviceNameService.GetDevice (pLogTarget, FALSE);
+		}
+
+		boolean bTargetNotFound = pLogTarget != 0 && pTarget == 0;
+
+		if (pTarget == 0)
+		{
+			pTarget = &m_Serial;
+		}
+
+		bOK = m_Logger.Initialize (pTarget);
+
+		if (   bOK
+		    && bTargetNotFound)
+		{
+			m_Logger.Write (FromKernel, LogWarning,
+					"Log device \"%s\" not found, using the serial interface",
+					pLogTarget);
+		}
 	}
 
 	if (bOK)
@@ -117,6 +147,12 @@ boolean CKernel::Initialize (void)
 TShutdownMode CKernel::Run (void)
 {
 	m_Logger.Write (FromKernel, LogNotice, "Compile time: " __DATE__ " " __TIME__);
+
+#if RASPPI >= 5
+	m_Logger.Write (FromKernel, LogNotice,
+			"Debug messages go to the UART connector (uart10) at %u baud",
+			SERIAL_BAUD_RATE);
+#endif
 
 	m_Logger.Write (FromKernel, LogNotice, "%u net device(s) available",
 			CNetDevice::GetNumNetDevices ());

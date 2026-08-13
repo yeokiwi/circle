@@ -40,6 +40,14 @@ variable SOEMHOME can be set, for example:
 
 	make SOEMHOME=/path/to/SOEM
 
+The internal debug messages of SOEM (EC_PRINT) are disabled by default. They
+can be enabled with:
+
+	make EC_DEBUG=1
+
+These messages are written to the Circle system log with the log level
+LogDebug. They are very verbose and are meant for troubleshooting only.
+
 A demonstration of this library is in sample/47-ethercatweb.
 
 
