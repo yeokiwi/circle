@@ -1,0 +1,127 @@
+README
+
+This sample program uses a Raspberry Pi with two Ethernet ports as EtherCAT
+master and shows the status of the EtherCAT network and of the Raspberry Pi
+itself on a web page, which is served on the second Ethernet port.
+
+It has been written for the Compute Module 5, which provides one on-board
+Ethernet port, extended with a second port using a USB Ethernet device, but
+works on any Raspberry Pi model with two available net devices.
+
+	+-------------------+  eth0 (raw EtherCAT frames)  +--------------+
+	|  Raspberry Pi     |----------------------------->| EtherCAT     |
+	|  (Circle + SOEM)  |                              | slave(s)     |
+	|                   |  eth1 (TCP/IP, HTTP)         +--------------+
+	|                   |----------------------------->  your browser
+	+-------------------+
+
+The EtherCAT master is implemented with SOEM (Simple Open EtherCAT Master) by
+the OpenEtherCATsociety. SOEM is not part of Circle and has to be downloaded
+before this sample can be built (see below).
+
+Required hardware:
+
+	* A Raspberry Pi with an on-board Ethernet controller (e.g. CM5)
+	* One or more EtherCAT slaves, connected to the on-board Ethernet port
+	* A USB Ethernet device with a CDC Ethernet (ECM) interface, for
+	  instance based on a Realtek RTL815x chip, connected to your network
+	  with a DHCP server. On the Raspberry Pi 5 it has to be attached to a
+	  root port directly, because USB 3 hubs are not supported.
+
+Do not connect the EtherCAT port to your office network. The EtherCAT master
+sends broadcast frames to this port and there is no IP stack behind it.
+
+
+BUILD
+
+Download and build the SOEM library first, as described in the file
+addon/soem/README:
+
+	cd addon/soem
+	git clone https://github.com/OpenEtherCATsociety/SOEM.git
+	make
+
+Then build this sample as usual:
+
+	cd sample/47-ethercatweb
+	make
+
+If the library libsoem.a has not been built, the build of this sample is
+skipped with a message, so that a build of all samples does not fail.
+
+
+WHAT IT DOES
+
+The application creates two independent net device users:
+
+* The on-board Ethernet device (net device 0) is used by the EtherCAT master
+  directly. EtherCAT frames are sent to and received from this device without
+  a TCP/IP stack in between. The class CEtherCATMaster (see ethercat.h) runs
+  the master in an own task:
+
+	- it scans the bus (ecx_config_init()),
+	- reads the identity and the CoE objects 0x1008 (device name), 0x1009
+	  (hardware version) and 0x100A (software version) from the slaves,
+	- maps the process data (ecx_config_map_group()),
+	- configures the distributed clocks (ecx_configdc()),
+	- brings all slaves to the OPERATIONAL state,
+	- exchanges process data every 4 ms (see ETHERCAT_CYCLE_TIME_US in
+	  kernel.h) and monitors the working counter,
+	- tries to recover lost slaves and scans the bus again, if the
+	  connection to all slaves is lost.
+
+  The process data is only read by this sample. If you want to control the
+  outputs of a slave, write to the buffer, which is returned in the field
+  "outputs" of the group (ctx->grouplist[0].outputs), before the process data
+  is sent in CEtherCATMaster::CyclicProcess().
+
+* The second Ethernet device (net device 1) runs a TCP/IP stack, which gets
+  its IP address via DHCP. The web server (see webserver.h) serves a dashboard
+  on port 80, which is updated once per second from the URL "/status.json".
+  The IP address to be used is written to the system log.
+
+The web page shows:
+
+	* the state of the EtherCAT master and of the Ethernet link,
+	* the number of slaves, the working counter and the cycle counters,
+	* the frame statistics of the EtherCAT net device,
+	* the process data (first 16 bytes per direction),
+	* a table with all slaves (state, AL status code, addresses, identity,
+	  process data sizes and the parameters read via CoE),
+	* the status of the Raspberry Pi: model, SoC, RAM size, CPU clock rate,
+	  SoC temperature, throttled state, free heap space and uptime,
+	* the network configuration and the state of all net devices,
+	* the tasks of the Circle scheduler.
+
+The system log shows the state of the master every 10 seconds too.
+
+
+CONFIGURATION
+
+The used net devices and the cycle time are defined in kernel.h:
+
+	ETHERCAT_NET_DEVICE	net device for EtherCAT (default 0)
+	WEBSERVER_NET_DEVICE	net device for the web server (default 1)
+	ETHERCAT_CYCLE_TIME_US	process data cycle time (default 4000 us)
+
+The on-board Ethernet device is initialized before the USB host controller in
+CKernel::Initialize(), so that it becomes net device 0 and the USB Ethernet
+device becomes net device 1. See doc/multiple-net-devices.txt for details.
+
+The number of slaves, which is shown on the web page, and the size of the
+process data image are defined in ethercat.h (ETHERCAT_MAX_SLAVES and
+ETHERCAT_IOMAP_SIZE). The maximum number of slaves on the bus is defined as
+EC_MAXSLAVE in addon/soem/include/soem/ec_options.h.
+
+
+NOTES
+
+The scheduler of Circle is cooperative and non-preemptive. The EtherCAT task
+does not give control to other tasks, while it waits for a frame to return
+(up to EC_TIMEOUTRET, 2 ms). Cycle times below one millisecond are not
+recommended. There is no synchronization of the system time of the Raspberry
+Pi to the distributed clock of the EtherCAT network.
+
+If no slaves are found or the Ethernet link is down, the master scans the bus
+again every five seconds. The web server works in this case too and shows the
+reason in the field "Last error".

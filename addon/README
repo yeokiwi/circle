@@ -28,6 +28,7 @@ profile	[5]	Software profiling library for performance analysis
 rtc	[5]	Library providing drivers for real-time clocks (RTC)
 SDCard	[5]	Driver for SD card access using the internal EMMC controller (by John Cronin)
 sensor	[5]	Drivers for I2C and other sensor devices
+soem	[5]	SOEM (Simple Open EtherCAT Master) port, requires the SOEM sources (by OpenEtherCATsociety)
 Spectrum	ZX Spectrum screen emulator class (by Jose Luis Sanchez)
 tftpfileserver [5] TFTP file server supporting kernel image and firmware updates
 ugui		Digital oscilloscope sample using the uGUI library (by Achim Doebler)
