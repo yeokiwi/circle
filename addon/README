@@ -16,6 +16,7 @@ dio		Library providing access to the spi_dio board by BitWizard.nl
 display	[5]	Library providing drivers for displays (e.g. LCD dot-matrix)
 fatfs	[5]	FatFs - Generic FAT file system module with LFN support (by ChaN)
 gpio	[5]	Library providing access to external GPIO expander boards (e.g. RTK.GPIO)
+jsd	[5]	JSD (JPL Servo Drive) port for Elmo servo drives over EtherCAT, requires the JSD sources (by NASA JPL)
 OneWire	[5]	Support library for 1-wire devices (by Paul Stoffregen) and DS18x20 sensors
 Properties [5]	Library providing access to configuration properties saved in a file
 qemu		Support library and demos for using Circle with QEMU

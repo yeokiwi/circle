@@ -46,6 +46,7 @@ SAMPLES
 45-gpiowebcontrol	Web server to control GPIO pins, output PWM (hardware PWM up to 20 MHz, software PWM on multiple pins) with selectable duty cycle, manage SD card files and reboot.
 46-dualethernet	[5]	Two independent TCP/IP stacks, on the on-board Ethernet port and on a USB Ethernet device
 47-ethercatweb	[5]	EtherCAT master (SOEM) on the on-board Ethernet port, status web server on a second port (requires addon/soem)
+48-elmoweb	[5]	Elmo servo drive control with JSD over EtherCAT, with status and control web interface (requires addon/soem and addon/jsd)
 
 Samples marked with [PnP] are enabled for USB plug-and-play.
 Samples marked with [5] are working on the Raspberry Pi 5.

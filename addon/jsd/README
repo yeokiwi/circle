@@ -1,0 +1,140 @@
+README
+
+This directory contains the Circle port of JSD (JPL Servo Drive), which allows
+to command and control Elmo servo drives over EtherCAT from a bare metal
+application. JSD is developed by the Jet Propulsion Laboratory, California
+Institute of Technology, and is not part of Circle:
+
+	https://github.com/nasa-jpl/jsd
+
+JSD is distributed under a 3-clause BSD license. Please see the file LICENSE in
+the JSD sources for the full license information.
+
+This port supports the Elmo drives only:
+
+	* Elmo Gold drives (jsd_egd)
+	* Elmo Platinum drives in nominal (DS-402) mode (jsd_epd_nominal)
+
+The other device drivers, which come with JSD (Beckhoff EL terminals, ATI
+force/torque sensors, JPL JED boards, Micro-Epsilon ILD1900 and the Platinum
+drives in SIL mode), are not built, but can be added (see below).
+
+
+GET THE JSD SOURCES
+
+Change to this directory (addon/jsd) and enter:
+
+	git clone https://github.com/nasa-jpl/jsd.git
+
+This port has been developed against JSD 3.1.8 (branch "master"). The build
+system of JSD (CMake) is not used. Only the include directory, which the CMake
+build normally generates, is created as a symbolic link by the Makefile.
+
+
+BUILD
+
+The Circle libraries and the SOEM library in addon/soem have to be built first
+(see addon/soem/README). Then enter here:
+
+	make
+
+This creates the library libjsd.a. If the JSD sources have been cloned to
+another directory, the variable JSDHOME can be set:
+
+	make JSDHOME=/path/to/jsd
+
+The internal debug messages of JSD are disabled by default and can be enabled
+with:
+
+	make JSD_DEBUG=1
+
+A demonstration of this library is in sample/48-elmoweb.
+
+
+HOW THE PORT WORKS
+
+JSD is written against SOEM 1.4 (with the build option EC_VER2, which selects
+the context API) and against a POSIX system with threads, while Circle comes
+with a port of SOEM 2.0 and has its own cooperative scheduler. The two versions
+of SOEM are not source compatible: SOEM 1.4 keeps the slave list and all
+internal buffers behind pointers in ecx_contextt, which the application has to
+allocate, while SOEM 2.0 embeds them in the context.
+
+Fortunately the SOEM dependency of JSD is concentrated in two files: only
+src/jsd.c and src/jsd_sdo.c call SOEM functions. All device drivers, including
+the Elmo drivers, access the SOEM context through its data members only
+(slavelist[n].inputs, slavelist[n].outputs, ...), which work the same in both
+versions. That's why the device drivers are used unmodified here and only the
+bus layer has been rewritten:
+
+  Original		Replacement			Reason
+  ---------------------------------------------------------------------------
+  src/jsd.c		circle/jsd_circle.cpp		SOEM 2.0, Circle tasks
+  src/jsd_sdo.c		circle/jsd_sdo_circle.cpp	SOEM 2.0, Circle tasks
+  src/jsd_print.h	include/jsd/jsd_print.h		CLogger instead of stdio
+  src/jsd_time.h	include/jsd/jsd_time.h		CTimer instead of POSIX
+  src/jsd_timer.c	(dropped)			Circle owns the loop
+  <pthread.h>		compat/pthread.h		mutexes on CMutex
+  <stdlib.h>		compat/stdlib.h			see the file
+  <unistd.h>		compat/unistd.h			see the file
+  ethercat.h		compat/ethercat.h		maps SOEM 1.4 to 2.0
+
+These files are used unmodified from the JSD sources:
+
+	jsd_egd.c, jsd_epd_nominal.c, jsd_epd_common.c, jsd_elmo_common.c,
+	jsd_common_device_types.c, jsd_error_cirq.c and all headers
+
+The compatibility header compat/ethercat.h maps the name of the slave
+configuration hook (PO2SOconfigx in SOEM 1.4, PO2SOconfig in SOEM 2.0) and
+includes soemcpp.h in C++ files, which resolves the different definitions of
+the type "boolean" in SOEM and Circle.
+
+Some functions, which JSD expects from the C library, are provided by the port,
+because Circle does not have them: bsearch(3) and strdup(3) in
+circle/jsd_support.cpp, and snprintf(3) in the Circle port of SOEM.
+
+
+DIFFERENCES IN BEHAVIOR
+
+* The asynchronous SDO requests are serviced by a Circle task ("jsdsdo"), not
+  by a POSIX thread. The slaves with a mailbox are registered at the cyclic
+  mailbox handler of SOEM 2.0, which is pumped from jsd_read() once per process
+  data cycle. This way an SDO transfer, which can take up to 1.4 seconds, does
+  not stall the process data cycle of the application.
+* The transition to the OPERATIONAL state exchanges process data continuously,
+  while it waits for the state change. The original implementation waits for up
+  to EC_TIMEOUTSTATE without sending process data, which some drives do not
+  tolerate.
+* jsd_ec_state_to_string() returns a static string for unknown states. The
+  original implementation returns strdup(), which the caller cannot free
+  consistently.
+* jsd_alloc() does not allocate the SOEM context members, because SOEM 2.0
+  embeds them.
+
+The API of JSD is unchanged otherwise: an application calls jsd_alloc(),
+jsd_set_slave_config() for each drive, jsd_init(), and then cyclically
+jsd_read(), jsd_<driver>_read(), the command functions, jsd_<driver>_process()
+and jsd_write().
+
+
+ADDING MORE DEVICE DRIVERS
+
+To use another device driver of JSD, add its source file to JSDSRCS in the
+Makefile and add the driver type to jsd_init_single_device() and
+jsd_driver_is_compatible_with_product_code() in circle/jsd_circle.cpp. Devices,
+which use their own threads or the C library, may need more work.
+
+
+REQUIREMENTS AND LIMITATIONS
+
+* The Circle scheduler (lib/sched) and the SOEM library (addon/soem) are
+  required. jsd_init() fails without the scheduler.
+* The scheduler of Circle is cooperative and non-preemptive. The application
+  has to call the cyclic functions at a constant rate, which has to match the
+  configured loop_period_ms of the drives, and no other task may block for
+  longer than the cycle time. Cycle times below one millisecond are not
+  recommended.
+* The size of the process data image is JSD_IOMAP_BYTES (4096) bytes, as in the
+  original JSD.
+* Line redundancy is not supported by the Circle port of SOEM.
+* This port has not been tested against real Elmo hardware.

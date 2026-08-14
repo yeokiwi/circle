@@ -1,0 +1,184 @@
+README
+
+This sample program turns a Raspberry Pi with two Ethernet ports into an
+EtherCAT master for Elmo servo drives, with a web interface, which shows the
+drive parameters and status, and allows to control the drives from a browser.
+
+	+-------------------+  eth0 (EtherCAT)    +--------------+
+	|  Raspberry Pi     |-------------------->| Elmo drive(s)|
+	|  Circle+SOEM+JSD  |                     +--------------+
+	|                   |  eth1 (TCP/IP)
+	|                   |--------------------->  your browser
+	+-------------------+
+
+The drives are controlled with JSD (JPL Servo Drive) by the Jet Propulsion
+Laboratory, which is used through its Circle port in addon/jsd. Both Elmo
+drive families are supported: Gold drives (jsd_egd) and Platinum drives in
+nominal mode (jsd_epd_nominal). The drives are detected automatically from
+their EtherCAT product code.
+
+	!!! THIS PROGRAM MOVES MOTORS FROM A WEB PAGE. READ THE SAFETY  !!!
+	!!! SECTION BELOW BEFORE YOU CONNECT A DRIVE TO A MACHINE.      !!!
+
+Required hardware:
+
+	* A Raspberry Pi with an on-board Ethernet controller (e.g. CM5)
+	* One or more Elmo Gold or Platinum drives on the on-board port
+	* A USB Ethernet device with a CDC Ethernet (ECM) interface for the
+	  web interface, connected to a network with a DHCP server. On the
+	  Raspberry Pi 5 it has to be attached to a root port directly,
+	  because USB 3 hubs are not supported.
+
+
+BUILD
+
+Download and build SOEM and JSD first:
+
+	cd addon/soem
+	git clone https://github.com/OpenEtherCATsociety/SOEM.git
+	make
+
+	cd ../jsd
+	git clone https://github.com/nasa-jpl/jsd.git
+	make
+
+Then build this sample:
+
+	cd sample/48-elmoweb
+	make
+
+If libjsd.a has not been built, the build of this sample is skipped with a
+message, so that a build of all samples does not fail.
+
+
+BEFORE YOU START: DRIVE PARAMETERS
+
+When the bus goes operational, JSD writes the drive parameters from its
+configuration into the drives. The values are defined at the top of
+elmodrive.h and are intentionally very conservative:
+
+	ELMO_PEAK_CURRENT_A		1.0 A	(PL[1])
+	ELMO_CONTINUOUS_CURRENT_A	0.5 A	(CL[1])
+	ELMO_MAX_MOTOR_SPEED		100000 counts/s
+	ELMO_LOW/HIGH_POSITION_LIMIT	0	(position limits disabled)
+
+ADAPT THESE VALUES TO YOUR MOTOR before you connect one. A current limit,
+which is too high for your motor, can damage it. The drive rejects the
+configuration, if the continuous current is above the peak current, or if the
+peak current is above the maximum current of the drive (MC[1]) - that check is
+left active on purpose.
+
+The parameter CRC check of JSD is overridden (crc = INT32_MIN), because the
+CRC of your drive is not known to this sample. In a real application you would
+put the CRC of your commissioned drive there, so that JSD refuses to run, if
+somebody changed the drive parameters.
+
+The commands, which come in over the web interface, are clamped in the master
+against these limits (see StartMotion() in elmodrive.cpp):
+
+	ELMO_MAX_JOG_VELOCITY		20000 counts/s
+	ELMO_MAX_MOVE_VELOCITY		20000 counts/s
+	ELMO_MAX_TORQUE_A		the continuous current limit
+
+The limits, which are displayed in the web interface, are informational. The
+clamping in the master is what protects the machine.
+
+
+WHAT IT DOES
+
+* The on-board Ethernet device (net device 0) is used for EtherCAT. The bus is
+  scanned first to find the Elmo drives and their families, then JSD is
+  configured accordingly and brings the bus to the OPERATIONAL state.
+* The process data is exchanged every 2 ms (ETHERCAT_CYCLE_TIME_US in
+  kernel.h). The cycle uses an absolute deadline, so that the period does not
+  drift, and counts the cycles, which were late ("missed deadlines" on the web
+  page). The cycle time is written to the drives as the expected loop period
+  (object 0x60C2), so both values must match.
+* The second Ethernet device (net device 1) runs the TCP/IP stack with the web
+  server on port 80. The IP address is written to the system log.
+
+The web page shows per drive: the CiA 402 state machine state, the mode of
+operation, the fault and EMCY code, the servo/motor/motion/STO/warning flags,
+the actual and commanded position, velocity, current, bus voltage, drive
+temperature and the digital inputs. The bus card shows the master state, the
+link, the working counter, the cycle statistics and the jitter. The system card
+shows the Raspberry Pi status.
+
+
+CONTROL INTERFACE AND INTERLOCKS
+
+Each drive has these controls:
+
+	Enable		bring the drive to OPERATION ENABLED (repeated reset,
+			which is how a drive is enabled with JSD)
+	Disable		disable the drive
+	Reset faults	acknowledge the faults and enable again
+	Arm/Disarm	allow or forbid motion commands
+	STOP		quick stop and disarm, always accepted
+	Jog		velocity move, +/- the entered velocity
+	Move to/by	absolute or relative position move
+	Apply torque	torque command, with an extra confirmation
+
+Four interlocks protect against the obvious accidents:
+
+1. A motion command is rejected, unless the drive is enabled AND armed. The
+   web page disables the motion buttons, but the master enforces it.
+2. The master halts an armed drive and disarms it, if it does not see a request
+   from the web interface within 500 ms (ELMO_WATCHDOG_MS). This covers a
+   closed browser tab, a crashed browser and a pulled network cable during a
+   jog. The web page polls the status every 200 ms, while a drive is armed.
+3. All targets are clamped in the master, see above.
+4. Torque mode asks for a confirmation in the browser, because it has no
+   position or velocity limiting in the drive.
+
+Note that the drives have their own protection against a lost master: JSD
+configures 5 extrapolation cycles (object 0x2F75 on Gold, 0x3675 on Platinum)
+and the quick stop ramp (object 0x605A = 2), so a drive stops by itself, if the
+process data stops arriving.
+
+	THERE IS NO AUTHENTICATION. Anybody, who can reach the web port, can
+	move your motors. Put the web port on an isolated network.
+
+
+COMMAND MODES
+
+An Elmo Gold drive accepts either the profiled commands (the drive generates
+the motion profile) or the cyclic synchronous commands (the master sends a
+setpoint in each cycle), which is fixed, when the bus is configured. A Platinum
+drive accepts both.
+
+This sample configures the profiled mode by default (pDrive->Mode in
+CElmoMaster::Discover()), because the drive generates the profile itself then,
+which is much less sensitive to a jittery cycle time. If you switch a drive to
+ElmoCommandModeCyclic, the master generates a trapezoidal profile in
+UpdateCyclicMotion() and sends CSP/CSV/CST setpoints instead. Watch the "missed
+deadlines" counter on the web page in this case.
+
+
+TROUBLESHOOTING
+
+The debug messages go to the serial interface, on the Raspberry Pi 5 to the
+dedicated 3-pin UART connector (uart10) at 115200 baud, like in
+sample/47-ethercatweb. Use "logtarget=tty1" in cmdline.txt to write them to the
+screen instead.
+
+	cd addon/jsd && make clean && make JSD_DEBUG=1
+
+enables the internal debug messages of JSD, which show the SDO transfers of the
+drive configuration. This is the first thing to try, if a drive does not reach
+the OPERATIONAL state.
+
+If the bus does not become operational, the log shows which step failed. A
+frequent cause is a drive parameter, which the drive rejects (see above), or a
+loop period, which does not match the configured value.
+
+
+LIMITATIONS
+
+The Circle scheduler is cooperative and non-preemptive, so the cycle can be
+delayed by another task, which does not yield. The dashboard shows the number
+of missed deadlines and the longest measured cycle period, so this is visible
+rather than silent. There is no synchronization of the system time of the
+Raspberry Pi to the distributed clock of the EtherCAT network.
+
+This sample has never been tested against real Elmo hardware.
