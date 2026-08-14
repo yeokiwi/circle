@@ -1,0 +1,59 @@
+diff --git a/src/jsd_egd.c b/src/jsd_egd.c
+index b87d1e1..f1b63bd 100644
+--- a/src/jsd_egd.c
++++ b/src/jsd_egd.c
+@@ -1760,5 +1760,6 @@ jsd_egd_fault_code_t jsd_egd_get_fault_code_from_ec_error(ec_errort error) {
+ }
+ 
+ bool jsd_egd_product_code_is_compatible(uint32_t product_code) {
+-  return product_code == JSD_EGD_PRODUCT_CODE;
++  return (product_code == JSD_EGD_PRODUCT_CODE) ||
++         (product_code == (uint32_t)JSD_EGD_PRODUCT_CODE_EXTRA);
+ }
+diff --git a/src/jsd_egd_types.h b/src/jsd_egd_types.h
+index bcfe917..a68e6a3 100644
+--- a/src/jsd_egd_types.h
++++ b/src/jsd_egd_types.h
+@@ -9,6 +9,11 @@ extern "C" {
+ #include "jsd/jsd_elmo_common_types.h"
+ 
+ #define JSD_EGD_PRODUCT_CODE (uint32_t)0x00030924
++// Circle port: additional product code of a Gold drive variant, which is not
++// known to JSD, see JSD_EPD_PRODUCT_CODE_EXTRA in jsd_epd_common_types.h.
++#ifndef JSD_EGD_PRODUCT_CODE_EXTRA
++#define JSD_EGD_PRODUCT_CODE_EXTRA JSD_EGD_PRODUCT_CODE
++#endif
+ 
+ #define JSD_EGD_NUM_DIGITAL_OUTPUTS 6
+ #define JSD_EGD_NUM_DIGITAL_INPUTS 6
+diff --git a/src/jsd_epd_common.c b/src/jsd_epd_common.c
+index fe8fabb..ed7b5d0 100644
+--- a/src/jsd_epd_common.c
++++ b/src/jsd_epd_common.c
+@@ -269,5 +269,6 @@ jsd_epd_fault_code_t jsd_epd_get_fault_code_from_ec_error(ec_errort error) {
+ 
+ bool jsd_epd_product_code_is_compatible_impl(uint32_t product_code) {
+   return (product_code == JSD_EPD_PRODUCT_CODE_STD_FW) ||
+-         (product_code == JSD_EPD_PRODUCT_CODE_SAFETY_FW);
++         (product_code == JSD_EPD_PRODUCT_CODE_SAFETY_FW) ||
++         (product_code == (uint32_t)JSD_EPD_PRODUCT_CODE_EXTRA);
+ }
+diff --git a/src/jsd_epd_common_types.h b/src/jsd_epd_common_types.h
+index e2e8910..6b89970 100644
+--- a/src/jsd_epd_common_types.h
++++ b/src/jsd_epd_common_types.h
+@@ -14,6 +14,14 @@ extern "C" {
+ #define JSD_EPD_PRODUCT_CODE_STD_FW (uint32_t)0x00100002
+ // Product code of Platinum drives that use the Safety firmware (FSOE, Safe I/O)
+ #define JSD_EPD_PRODUCT_CODE_SAFETY_FW (uint32_t)0x01100002
++// Circle port: additional product code of a Platinum drive variant, which is
++// not known to JSD. Define it on the compiler command line, for example with
++// "make ELMO_EPD_PRODUCT_CODE=0x00900002". If it is not defined, it repeats a
++// product code, which is accepted anyway, so the check is unchanged.
++// See addon/jsd/README of the Circle project.
++#ifndef JSD_EPD_PRODUCT_CODE_EXTRA
++#define JSD_EPD_PRODUCT_CODE_EXTRA JSD_EPD_PRODUCT_CODE_STD_FW
++#endif
+ 
+ // TODO(dloret): Double check whether RESET_DERATE is still necessary.
+ #define JSD_EPD_RESET_DERATE_SEC 1.0

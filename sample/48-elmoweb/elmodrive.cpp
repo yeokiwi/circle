@@ -47,6 +47,7 @@ CElmoMaster::CElmoMaster (unsigned nDeviceIndex, unsigned nCycleTimeUs)
 	m_pJSD (0),
 	m_bRunning (FALSE),
 	m_nDriveCount (0),
+	m_nSlaveInfoCount (0),
 	m_nCommandIn (0),
 	m_nCommandOut (0),
 	m_nCycles (0),
@@ -62,6 +63,7 @@ CElmoMaster::CElmoMaster (unsigned nDeviceIndex, unsigned nCycleTimeUs)
 	m_Interface.Format ("eth%u", nDeviceIndex);
 
 	memset (m_Drive, 0, sizeof m_Drive);
+	memset (m_SlaveInfo, 0, sizeof m_SlaveInfo);
 
 	m_pStatus = new TElmoStatus;
 	assert (m_pStatus != 0);
@@ -125,6 +127,9 @@ boolean CElmoMaster::Discover (void)
 	m_nDriveCount = 0;
 	memset (m_Drive, 0, sizeof m_Drive);
 
+	m_nSlaveInfoCount = 0;
+	memset (m_SlaveInfo, 0, sizeof m_SlaveInfo);
+
 	m_MasterState = "Scanning";
 
 	CNetDevice *pNetDevice = CNetDevice::GetNetDevice (NetDeviceTypeEthernet,
@@ -161,34 +166,48 @@ boolean CElmoMaster::Discover (void)
 	{
 		if (ecx_config_init (pScan) > 0)
 		{
-			for (int nSlave = 1;
-			         nSlave <= pScan->slavecount
-			         && m_nDriveCount < ELMO_MAX_DRIVES;
-			         nSlave++)
-			{
-				ec_slavet *pSlave = &pScan->slavelist[nSlave];
+			// Collect the identification of every slave first, so that a
+			// device, which is not driven by this application, can be
+			// identified from the log and from the web page.
+			ReadSlaveInfo (pScan);
 
-				if (pSlave->eep_man != JSD_ELMO_VENDOR_ID)
+			for (unsigned i = 0; i < m_nSlaveInfoCount; i++)
+			{
+				TElmoSlaveInfo *pInfo = &m_SlaveInfo[i];
+
+				if (!pInfo->bElmo)
 				{
+					strncpy (pInfo->Note, "not an Elmo device",
+						 sizeof pInfo->Note - 1);
+
 					continue;
 				}
 
 				TElmoFamily Family = ElmoFamilyUnknown;
 
-				if (jsd_egd_product_code_is_compatible (pSlave->eep_id))
+				if (jsd_egd_product_code_is_compatible (pInfo->ProductCode))
 				{
 					Family = ElmoFamilyGold;
 				}
 				else if (jsd_epd_nominal_product_code_is_compatible (
-						pSlave->eep_id))
+						pInfo->ProductCode))
 				{
 					Family = ElmoFamilyPlatinum;
 				}
 				else
 				{
-					CLogger::Get ()->Write (FromElmo, LogWarning,
-						"slave[%d] is an unsupported Elmo device "
-						"(product code 0x%X)", nSlave, pSlave->eep_id);
+					strncpy (pInfo->Note,
+						 "Elmo product code is not known to JSD",
+						 sizeof pInfo->Note - 1);
+
+					continue;
+				}
+
+				if (m_nDriveCount >= ELMO_MAX_DRIVES)
+				{
+					strncpy (pInfo->Note,
+						 "too many drives (see ELMO_MAX_DRIVES)",
+						 sizeof pInfo->Note - 1);
 
 					continue;
 				}
@@ -196,10 +215,10 @@ boolean CElmoMaster::Discover (void)
 				TElmoDrive *pDrive = &m_Drive[m_nDriveCount];
 
 				pDrive->bPresent = TRUE;
-				pDrive->nSlave = nSlave;
+				pDrive->nSlave = pInfo->nSlave;
 				pDrive->Family = Family;
-				pDrive->ProductCode = pSlave->eep_id;
-				pDrive->SerialNumber = pSlave->eep_ser;
+				pDrive->ProductCode = pInfo->ProductCode;
+				pDrive->SerialNumber = pInfo->Serial;
 
 				// An Elmo Gold drive accepts either the profiled or the
 				// cyclic synchronous commands, not both. The profiled mode
@@ -210,8 +229,17 @@ boolean CElmoMaster::Discover (void)
 
 				pDrive->Motion = ElmoCommandNone;
 
+				pInfo->bDriven = TRUE;
+				strncpy (pInfo->Note,
+					 Family == ElmoFamilyGold
+						? "driven as an Elmo Gold drive"
+						: "driven as an Elmo Platinum drive",
+					 sizeof pInfo->Note - 1);
+
 				m_nDriveCount++;
 			}
+
+			LogSlaveInfo ();
 
 			m_pStatus->nSlaveCount = pScan->slavecount;
 
@@ -242,6 +270,121 @@ boolean CElmoMaster::Discover (void)
 	}
 
 	return bOK;
+}
+
+void CElmoMaster::ReadSlaveInfo (ecx_contextt *pContext)
+{
+	assert (pContext != 0);
+
+	m_nSlaveInfoCount = 0;
+	memset (m_SlaveInfo, 0, sizeof m_SlaveInfo);
+
+	for (int nSlave = 1;
+	         nSlave <= pContext->slavecount
+	         && m_nSlaveInfoCount < ELMO_MAX_SLAVES;
+	         nSlave++)
+	{
+		ec_slavet *pSlave = &pContext->slavelist[nSlave];
+		TElmoSlaveInfo *pInfo = &m_SlaveInfo[m_nSlaveInfoCount++];
+
+		pInfo->nSlave = nSlave;
+		strncpy (pInfo->Name, pSlave->name, sizeof pInfo->Name - 1);
+
+		pInfo->VendorID = pSlave->eep_man;
+		pInfo->ProductCode = pSlave->eep_id;
+		pInfo->Revision = pSlave->eep_rev;
+		pInfo->Serial = pSlave->eep_ser;
+
+		pInfo->bElmo = pSlave->eep_man == JSD_ELMO_VENDOR_ID;
+
+		// The slaves are in the PRE-OP state here, so their mailbox is
+		// active and the standard identification objects can be read.
+		if (pSlave->mbx_proto & ECT_MBXPROT_COE)
+		{
+			pInfo->bHasCoE = TRUE;
+
+			ReadSlaveSDOString (pContext, nSlave, 0x1008, pInfo->DeviceName,
+					    sizeof pInfo->DeviceName);
+			ReadSlaveSDOString (pContext, nSlave, 0x1009,
+					    pInfo->HardwareVersion,
+					    sizeof pInfo->HardwareVersion);
+			ReadSlaveSDOString (pContext, nSlave, 0x100A,
+					    pInfo->SoftwareVersion,
+					    sizeof pInfo->SoftwareVersion);
+		}
+	}
+
+	if (pContext->slavecount > ELMO_MAX_SLAVES)
+	{
+		CLogger::Get ()->Write (FromElmo, LogWarning,
+			"Only the first %u of %d slaves are reported "
+			"(see ELMO_MAX_SLAVES)", ELMO_MAX_SLAVES, pContext->slavecount);
+	}
+}
+
+void CElmoMaster::ReadSlaveSDOString (ecx_contextt *pContext, unsigned nSlave,
+				      u16 usIndex, char *pString, size_t nSize)
+{
+	assert (pContext != 0);
+	assert (pString != 0);
+	assert (nSize > 0);
+
+	*pString = '\0';
+
+	char Buffer[ELMO_MAX_NAME];
+	memset (Buffer, 0, sizeof Buffer);
+
+	int nBufferSize = sizeof Buffer - 1;
+
+	if (ecx_SDOread (pContext, (uint16) nSlave, usIndex, 0x00, FALSE,
+			 &nBufferSize, Buffer, EC_TIMEOUTRXM) <= 0)
+	{
+		return;
+	}
+
+	if (   nBufferSize <= 0
+	    || (unsigned) nBufferSize >= sizeof Buffer)
+	{
+		return;
+	}
+
+	Buffer[nBufferSize] = '\0';
+
+	// remove non-printable characters
+	for (char *p = Buffer; *p != '\0'; p++)
+	{
+		if (   *p < ' '
+		    || *p > '~')
+		{
+			*p = ' ';
+		}
+	}
+
+	strncpy (pString, Buffer, nSize-1);
+	pString[nSize-1] = '\0';
+}
+
+void CElmoMaster::LogSlaveInfo (void)
+{
+	for (unsigned i = 0; i < m_nSlaveInfoCount; i++)
+	{
+		const TElmoSlaveInfo *pInfo = &m_SlaveInfo[i];
+
+		CLogger::Get ()->Write (FromElmo, LogNotice,
+			"slave[%u] \"%s\" vendor 0x%X product 0x%X rev 0x%X "
+			"serial 0x%X: %s",
+			pInfo->nSlave, pInfo->Name, pInfo->VendorID,
+			pInfo->ProductCode, pInfo->Revision, pInfo->Serial,
+			pInfo->Note);
+
+		if (pInfo->bHasCoE)
+		{
+			CLogger::Get ()->Write (FromElmo, LogNotice,
+				"slave[%u] device \"%s\" hardware \"%s\" software \"%s\"",
+				pInfo->nSlave, pInfo->DeviceName,
+				pInfo->HardwareVersion, pInfo->SoftwareVersion);
+		}
+	}
 }
 
 boolean CElmoMaster::Start (void)
@@ -353,6 +496,20 @@ boolean CElmoMaster::Start (void)
 		SetError ("Cannot bring the bus to the OPERATIONAL state");
 
 		return FALSE;
+	}
+
+	// the process data sizes are known now, publish them with the bus scan
+	for (unsigned i = 0; i < m_nSlaveInfoCount; i++)
+	{
+		TElmoSlaveInfo *pInfo = &m_SlaveInfo[i];
+
+		if (pInfo->nSlave <= (unsigned) m_pJSD->ecx_context.slavecount)
+		{
+			pInfo->nInputBytes =
+				m_pJSD->ecx_context.slavelist[pInfo->nSlave].Ibytes;
+			pInfo->nOutputBytes =
+				m_pJSD->ecx_context.slavelist[pInfo->nSlave].Obytes;
+		}
 	}
 
 	m_bRunning = TRUE;
@@ -1127,6 +1284,8 @@ void CElmoMaster::UpdateStatus (void)
 	m_pStatus->LastError[sizeof m_pStatus->LastError - 1] = '\0';
 
 	m_pStatus->nDriveCount = m_nDriveCount;
+	m_pStatus->nSlaveInfoCount = m_nSlaveInfoCount;
+	memcpy (m_pStatus->SlaveInfo, m_SlaveInfo, sizeof m_SlaveInfo);
 	m_pStatus->nCycles = m_nCycles;
 	m_pStatus->nWKCErrors = m_nWKCErrors;
 	m_pStatus->nMissedDeadlines = m_nMissedDeadlines;

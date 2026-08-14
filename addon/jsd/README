@@ -51,6 +51,69 @@ with:
 A demonstration of this library is in sample/48-elmoweb.
 
 
+PATCHES TO THE JSD SOURCES
+
+The files in patches/ are applied to the JSD clone, when this library is built
+for the first time. The marker file .circle-patched in the clone makes this
+idempotent: a re-build does not patch again, a fresh clone is patched again. The
+patches only add optional preprocessor knobs, they do not change the behavior of
+JSD, unless a knob is defined (see the next section).
+
+To build against an unpatched clone, remove the patches from patches/ before the
+first build. To re-apply the patches after a "git checkout" in the clone, delete
+the marker file:
+
+	rm jsd/.circle-patched && make clean && make
+
+
+UNKNOWN PRODUCT CODES
+
+JSD accepts an Elmo drive only, if its EtherCAT product code is one of the codes,
+which are hard coded in the sources:
+
+	0x00030924	Gold drives		JSD_EGD_PRODUCT_CODE
+	0x00100002	Platinum drives		JSD_EPD_PRODUCT_CODE_STD_FW
+	0x01100002	Platinum, safety FW	JSD_EPD_PRODUCT_CODE_SAFETY_FW
+
+The comparison is exact, so a drive of a variant, which JSD has not seen, is
+rejected, even though it belongs to a supported family. sample/48-elmoweb then
+reports it in the log and in the "Bus scan" card of the web page as
+
+	Elmo product code is not known to JSD
+
+The check is not only used at the bus scan: it is asserted at the top of every
+public function of the two Elmo drivers, so it cannot be bypassed by the
+application - a failed assert in the cyclic path would halt the system.
+
+If you are sure that your drive belongs to one of the two families, the code can
+be added at build time:
+
+	make ELMO_EPD_PRODUCT_CODE=0x00900002	(Platinum drive)
+	make ELMO_EGD_PRODUCT_CODE=0x...	(Gold drive)
+
+One additional code per family can be given. If the variable is not set, the
+patched sources behave exactly like the original ones, because the additional
+code defaults to a code, which is accepted anyway.
+
+BEFORE YOU MOVE A MOTOR WITH THIS, verify that the drive really has the process
+data layout, which the driver expects:
+
+* jsd_init() logs the mapped process data sizes of every slave and compares them
+  with the sizes, which the driver requires (37 input and 47 output bytes for
+  jsd_epd_nominal, 31 input and 31 output bytes for jsd_egd). It fails with a
+  message, if they do not match, so a wrong layout does not go unnoticed.
+* A layout with the same sizes but a different order would pass that check. Read
+  the reported position, velocity, current, bus voltage and temperature and turn
+  the motor shaft by hand: the values have to be plausible and have to change.
+
+Do not build JSD with NDEBUG to work around anything here. The drivers assert on
+the process data sizes in their read and process functions, and that assert is
+the last line of defense against misaligned process data.
+
+Please also report the product code upstream to nasa-jpl/jsd, so that the drive
+is supported without a local build option.
+
+
 HOW THE PORT WORKS
 
 JSD is written against SOEM 1.4 (with the build option EC_VER2, which selects

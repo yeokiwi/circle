@@ -32,6 +32,7 @@
 #include <jsd/jsd_pub.h>
 
 #define ELMO_MAX_DRIVES		8	// drives handled by this application
+#define ELMO_MAX_SLAVES		16	// slaves reported by the bus scan
 #define ELMO_MAX_NAME		32
 
 //
@@ -112,6 +113,34 @@ struct TElmoCommand
 	double	 fValue;			///< velocity in counts/s or torque in amps
 };
 
+/// \brief Identification of one EtherCAT slave, collected by the bus scan
+/// \note This is reported for every slave, also for those, which are not
+///	  driven by this application, so that an unknown device can be
+///	  identified from the web page or the system log.
+struct TElmoSlaveInfo
+{
+	unsigned nSlave;			///< EtherCAT slave number
+	char	 Name[ELMO_MAX_NAME];		///< name from the SII EEPROM
+	u32	 VendorID;			///< SII vendor ID
+	u32	 ProductCode;			///< SII product code
+	u32	 Revision;			///< SII revision number
+	u32	 Serial;			///< SII serial number
+
+	// from the CoE objects, empty, if the slave has no CoE mailbox
+	char	 DeviceName[ELMO_MAX_NAME];	///< object 0x1008
+	char	 HardwareVersion[ELMO_MAX_NAME];///< object 0x1009
+	char	 SoftwareVersion[ELMO_MAX_NAME];///< object 0x100A
+
+	boolean	 bHasCoE;			///< has a CoE mailbox
+	boolean	 bElmo;				///< vendor ID is Elmo
+	boolean	 bDriven;			///< handled as a drive by this app
+	char	 Note[80];			///< why it is not driven
+
+	// process data sizes, known after the bus has been configured
+	unsigned nInputBytes;
+	unsigned nOutputBytes;
+};
+
 /// \brief Status of one Elmo drive
 struct TElmoDriveStatus
 {
@@ -171,6 +200,9 @@ struct TElmoStatus
 	unsigned nSlaveCount;			///< slaves found on the bus
 	unsigned nDriveCount;			///< Elmo drives found
 
+	unsigned nSlaveInfoCount;		///< valid entries in SlaveInfo
+	TElmoSlaveInfo SlaveInfo[ELMO_MAX_SLAVES];
+
 	int	 nWorkCounter;
 	int	 nExpectedWorkCounter;
 	unsigned nCycleTimeUs;
@@ -213,6 +245,10 @@ public:
 private:
 	// bus
 	boolean Discover (void);		// scan the bus for Elmo drives
+	void ReadSlaveInfo (ecx_contextt *pContext);	// identify all slaves
+	void LogSlaveInfo (void);		// write the bus scan to the log
+	static void ReadSlaveSDOString (ecx_contextt *pContext, unsigned nSlave,
+					u16 usIndex, char *pString, size_t nSize);
 	boolean Start (void);			// configure the drives and go operational
 	void CyclicProcess (void);
 	void Stop (void);
@@ -269,6 +305,10 @@ private:
 
 	TElmoDrive m_Drive[ELMO_MAX_DRIVES];
 	unsigned m_nDriveCount;
+
+	// identification of all slaves, collected by the bus scan
+	TElmoSlaveInfo m_SlaveInfo[ELMO_MAX_SLAVES];
+	unsigned m_nSlaveInfoCount;
 
 	// command queue, filled by the web server task
 	CMutex	 m_CommandMutex;

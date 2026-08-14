@@ -49,6 +49,7 @@ private:
 	void BuildStatusJSON (CString &rJSON);
 	void AppendDriveStatus (CString &rJSON, const TElmoDriveStatus *pDrive,
 				unsigned nIndex);
+	void AppendSlaveInfo (CString &rJSON, const TElmoSlaveInfo *pInfo);
 	void AppendSystemStatus (CString &rJSON, const TSystemStatus *pStatus);
 
 	// executes a command from the control interface, returns the JSON response

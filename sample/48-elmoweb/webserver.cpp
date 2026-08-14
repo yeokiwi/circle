@@ -58,6 +58,8 @@ th, td { text-align: left; padding: .25rem .5rem; border-bottom: 1px solid #ecef
 tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
 th { color: #5f6368; font-weight: 500; }
 .mono { font-family: ui-monospace, monospace; }
+.scroll { overflow-x: auto; }
+.hint { font-size: .8rem; color: #5f6368; margin: .5rem 0 0 0; white-space: normal; }
 .tag { display: inline-block; padding: .1rem .5rem; border-radius: 1rem; font-size: .8rem;
        background: #e8eaed; color: #202124; }
 .ok { background: #e6f4ea; color: #137333; }
@@ -77,7 +79,7 @@ label { font-size: .85rem; color: #5f6368; margin-right: .3rem; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin: .3rem 0; }
 @media (prefers-color-scheme: dark) {
 body { background: #202124; color: #e8eaed; }
-h2, h3, th, label, #updated { color: #9aa0a6; }
+h2, h3, th, label, #updated, .hint { color: #9aa0a6; }
 .card { background: #292a2d; border-color: #3c4043; }
 th, td { border-bottom-color: #3c4043; }
 .tag { background: #3c4043; color: #e8eaed; }
@@ -106,6 +108,13 @@ input[type=number] { background: #292a2d; border-color: #5f6368; color: #e8eaed;
 <div class="card"><h2>System</h2><table><tbody id="system"></tbody></table></div>
 </div>
 <div id="drives"></div>
+<div class="card"><h2>Bus scan</h2>
+<div class="scroll"><table id="scan"><tbody></tbody></table></div>
+<p class="hint">Every slave, which was found on the bus, with its identity from the
+EEPROM and from the CoE objects 0x1008, 0x1009 and 0x100A, and why it is driven or
+not. If an Elmo product code is not known to JSD, see the section "UNKNOWN PRODUCT
+CODES" in addon/jsd/README.</p>
+</div>
 <script>
 var armedAny = false;
 var timer = null;
@@ -258,6 +267,33 @@ function updateCard(d, i) {
 		buttons[k].disabled = !canMove;
 	}
 }
+function scanTable(slaves) {
+	if (!slaves || !slaves.length) {
+		return '<tbody><tr><td>The bus has not been scanned yet.</td></tr></tbody>';
+	}
+	var out = '<thead><tr><th>#</th><th>EEPROM name</th><th>Vendor</th>'
+		+ '<th>Product code</th><th>Revision</th><th>Serial</th>'
+		+ '<th>Device name</th><th>Hardware</th><th>Software</th>'
+		+ '<th>PDO in/out</th><th>Status</th></tr></thead><tbody>';
+	for (var i = 0; i < slaves.length; i++) {
+		var s = slaves[i];
+		out += '<tr><td>' + s.slave + '</td>'
+			+ '<td>' + esc(s.name) + '</td>'
+			+ '<td><span class="mono">' + hex(s.vendor, 8) + '</span>'
+				+ (s.elmo ? ' ' + tag('Elmo', '') : '') + '</td>'
+			+ '<td class="mono">' + hex(s.productcode, 8) + '</td>'
+			+ '<td class="mono">' + hex(s.revision, 8) + '</td>'
+			+ '<td class="mono">' + hex(s.serial, 8) + '</td>'
+			+ '<td>' + (s.coe ? esc(s.devicename) : tag('no CoE', '')) + '</td>'
+			+ '<td>' + esc(s.hardware) + '</td>'
+			+ '<td>' + esc(s.software) + '</td>'
+			+ '<td class="mono">' + (s.inbytes || s.outbytes
+				? s.inbytes + ' / ' + s.outbytes : '&mdash;') + '</td>'
+			+ '<td>' + tag(s.note || (s.driven ? 'driven' : 'not driven'),
+				s.driven ? 'ok' : (s.elmo ? 'warn' : '')) + '</td></tr>';
+	}
+	return out + '</tbody>';
+}
 function render(data) {
 	var b = data.bus, s = data.system;
 
@@ -286,6 +322,8 @@ function render(data) {
 		+ row('IP address', '<span class="mono">' + esc(s.ip) + '</span>')
 		+ row('Tasks', s.taskcount)
 		+ row('Circle version', esc(s.version));
+
+	document.getElementById('scan').innerHTML = scanTable(b.slaves);
 
 	// rebuild the drive cards only, when the drives on the bus have changed
 	var sig = b.drives.map(function (d) { return d.slave + d.family; }).join('|');
@@ -664,6 +702,20 @@ void CWebServer::BuildStatusJSON (CString &rJSON)
 		AppendDriveStatus (rJSON, &pElmoStatus->Drives[i], i);
 	}
 
+	rJSON.Append ("],\"slaves\":[");
+
+	for (unsigned i = 0;
+	         i < pElmoStatus->nSlaveInfoCount && i < ELMO_MAX_SLAVES;
+	         i++)
+	{
+		if (i > 0)
+		{
+			rJSON.Append (",");
+		}
+
+		AppendSlaveInfo (rJSON, &pElmoStatus->SlaveInfo[i]);
+	}
+
 	rJSON.Append ("]},");
 
 	AppendSystemStatus (rJSON, pSystemStatus);
@@ -720,6 +772,33 @@ void CWebServer::AppendDriveStatus (CString &rJSON, const TElmoDriveStatus *pDri
 	AppendFloat (rJSON, "contcurrent", pDrive->fContinuousCurrentLimit);
 	AppendFloat (rJSON, "maxjogvelocity", pDrive->fMaxJogVelocity);
 	AppendFloat (rJSON, "maxtorque", pDrive->fMaxTorque);
+
+	RemoveTrailingComma (rJSON);
+
+	rJSON.Append ("}");
+}
+
+void CWebServer::AppendSlaveInfo (CString &rJSON, const TElmoSlaveInfo *pInfo)
+{
+	assert (pInfo != 0);
+
+	rJSON.Append ("{");
+
+	AppendNumber (rJSON, "slave", pInfo->nSlave);
+	AppendString (rJSON, "name", pInfo->Name);
+	AppendNumber (rJSON, "vendor", pInfo->VendorID);
+	AppendNumber (rJSON, "productcode", pInfo->ProductCode);
+	AppendNumber (rJSON, "revision", pInfo->Revision);
+	AppendNumber (rJSON, "serial", pInfo->Serial);
+	AppendString (rJSON, "devicename", pInfo->DeviceName);
+	AppendString (rJSON, "hardware", pInfo->HardwareVersion);
+	AppendString (rJSON, "software", pInfo->SoftwareVersion);
+	AppendBoolean (rJSON, "coe", pInfo->bHasCoE);
+	AppendBoolean (rJSON, "elmo", pInfo->bElmo);
+	AppendBoolean (rJSON, "driven", pInfo->bDriven);
+	AppendString (rJSON, "note", pInfo->Note);
+	AppendNumber (rJSON, "inbytes", pInfo->nInputBytes);
+	AppendNumber (rJSON, "outbytes", pInfo->nOutputBytes);
 
 	RemoveTrailingComma (rJSON);
 

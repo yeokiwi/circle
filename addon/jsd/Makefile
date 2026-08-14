@@ -36,12 +36,30 @@ OBJS	= $(PORTOBJS) $(JSDSRCS:.c=.o)
 
 EXTRACLEAN = $(PORTOBJS) $(PORTOBJS:.o=.d) $(JSDSRCS:.c=.o) $(JSDSRCS:.c=.d)
 
+# Preparation of the JSD sources. Both steps have to be done, while this file is
+# read, because the dependency files are generated before any rule is executed.
+ifneq ($(strip $(wildcard $(JSDHOME)/src/jsd_egd.c)),)
+
 # The JSD sources include their headers as "jsd/xxx.h", but the headers are in
 # src/. The CMake build of JSD copies them to include/jsd/, this link does the
-# same without copying. It has to be done, while this file is read, because the
-# dependency files are generated before any rule is executed.
-ifneq ($(strip $(wildcard $(JSDHOME)/src/jsd_egd.c)),)
+# same without copying.
 $(shell mkdir -p $(JSDHOME)/include && ln -sfn ../src $(JSDHOME)/include/jsd)
+
+# Apply the patches from patches/ to the JSD sources. They add the optional
+# product codes below. The marker file makes this idempotent: the patches are
+# applied once per clone, a new clone is patched again.
+ifeq ($(strip $(wildcard $(JSDHOME)/.circle-patched)),)
+ifeq ($(strip $(shell command -v patch)),)
+$(error The command "patch" is required to prepare the JSD sources, but was not found)
+endif
+$(info Applying the Circle patches to the JSD sources in $(JSDHOME) ...)
+$(shell for p in $(CURDIR)/patches/*.patch; do patch -p1 -N -s -d $(JSDHOME) < $$p; done \
+	&& touch $(JSDHOME)/.circle-patched)
+ifeq ($(strip $(wildcard $(JSDHOME)/.circle-patched)),)
+$(error Could not apply the Circle patches to the JSD sources in $(JSDHOME))
+endif
+endif
+
 endif
 
 libjsd.a: $(OBJS)
@@ -66,6 +84,24 @@ JSD_DEBUG ?= 0
 
 ifeq ($(strip $(JSD_DEBUG)),1)
 DEFINE	+= -DDEBUG
+endif
+
+# JSD accepts the Elmo drives with a known product code only. If your drive
+# reports a product code, which JSD does not know, it can be added here, for
+# example with:
+#
+#	make ELMO_EPD_PRODUCT_CODE=0x00900002	(Platinum drive)
+#	make ELMO_EGD_PRODUCT_CODE=0x...	(Gold drive)
+#
+# Do this only, if you are sure that the drive belongs to this family. Please
+# read the section "UNKNOWN PRODUCT CODES" in the README first.
+
+ifneq ($(strip $(ELMO_EPD_PRODUCT_CODE)),)
+DEFINE	+= -DJSD_EPD_PRODUCT_CODE_EXTRA=$(ELMO_EPD_PRODUCT_CODE)
+endif
+
+ifneq ($(strip $(ELMO_EGD_PRODUCT_CODE)),)
+DEFINE	+= -DJSD_EGD_PRODUCT_CODE_EXTRA=$(ELMO_EGD_PRODUCT_CODE)
 endif
 
 -include $(DEPS)

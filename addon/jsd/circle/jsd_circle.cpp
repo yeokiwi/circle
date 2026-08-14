@@ -150,12 +150,66 @@ bool jsd_init (jsd_t *self, const char *ifname, uint8_t enable_autorecovery,
 		return false;
 	}
 
+	// Report the mapped process data sizes and compare them with the sizes,
+	// which the device driver expects. The drivers assert on this in their
+	// read and process functions, which would halt the application in the
+	// cyclic path. Checking it here fails jsd_init() with a message instead.
 	int sid;
 	for (sid = 1; sid <= self->ecx_context.slavecount; sid++)
 	{
-		MSG_DEBUG ("slave[%d] IBytes: %u OBytes: %d", sid,
-			   self->ecx_context.slavelist[sid].Ibytes,
-			   self->ecx_context.slavelist[sid].Obytes);
+		jsd_slave_config_t *config = &self->slave_configs[sid];
+
+		unsigned mapped_in = self->ecx_context.slavelist[sid].Ibytes;
+		unsigned mapped_out = self->ecx_context.slavelist[sid].Obytes;
+
+		unsigned expected_in = 0;
+		unsigned expected_out = 0;
+
+		if (config->configuration_active)
+		{
+			switch (config->driver_type)
+			{
+			case JSD_DRIVER_TYPE_EGD:
+				expected_in = sizeof (jsd_egd_txpdo_data_t);
+				expected_out =
+					  config->egd.drive_cmd_mode
+					    == JSD_EGD_DRIVE_CMD_MODE_CS
+					? sizeof (jsd_egd_rxpdo_data_cs_mode_t)
+					: sizeof (jsd_egd_rxpdo_data_profiled_mode_t);
+				break;
+
+			case JSD_DRIVER_TYPE_EPD_NOMINAL:
+				expected_in = sizeof (jsd_epd_nominal_txpdo_data_t);
+				expected_out = sizeof (jsd_epd_nominal_rxpdo_data_t);
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		if (expected_in == 0)
+		{
+			MSG ("slave[%d] mapped %u input and %u output byte(s)",
+			     sid, mapped_in, mapped_out);
+
+			continue;
+		}
+
+		if (   mapped_in != expected_in
+		    || mapped_out != expected_out)
+		{
+			ERROR ("slave[%d] mapped %u input and %u output byte(s), "
+			       "but the driver requires %u and %u. The device does "
+			       "not have the PDO layout, which is expected for its "
+			       "product code.",
+			       sid, mapped_in, mapped_out, expected_in, expected_out);
+
+			return false;
+		}
+
+		MSG ("slave[%d] mapped %u input and %u output byte(s), as expected",
+		     sid, mapped_in, mapped_out);
 	}
 
 	ecx_statecheck (&self->ecx_context, 0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE);

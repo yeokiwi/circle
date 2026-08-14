@@ -104,6 +104,14 @@ temperature and the digital inputs. The bus card shows the master state, the
 link, the working counter, the cycle statistics and the jitter. The system card
 shows the Raspberry Pi status.
 
+The "Bus scan" card lists every slave, which was found on the bus, with the
+identity from its EEPROM (name, vendor ID, product code, revision, serial) and,
+if it has a CoE mailbox, the standard identification objects 0x1008 (device
+name), 0x1009 (hardware version) and 0x100A (software version). The last column
+says whether the slave is driven by this application, and if not, why. The same
+information is written to the system log during the bus scan. Use this card to
+identify a device, which this application does not drive.
+
 
 CONTROL INTERFACE AND INTERLOCKS
 
@@ -171,6 +179,26 @@ the OPERATIONAL state.
 If the bus does not become operational, the log shows which step failed. A
 frequent cause is a drive parameter, which the drive rejects (see above), or a
 loop period, which does not match the configured value.
+
+The message
+
+	slave[1] "..." vendor 0x9A product 0x900002 ...:
+		Elmo product code is not known to JSD
+
+means that the drive belongs to a supported family, but reports a product code,
+which is not in the hard coded list of JSD, so it is not driven. If you are sure
+about the family of your drive, build the library with the code:
+
+	cd addon/jsd && make clean && make ELMO_EPD_PRODUCT_CODE=0x00900002
+
+for a Platinum drive, or with ELMO_EGD_PRODUCT_CODE for a Gold drive, then
+rebuild this sample. Please read the section "UNKNOWN PRODUCT CODES" in
+addon/jsd/README first: it describes what to check on the drive afterwards,
+before you arm it.
+
+jsd_init() also logs the mapped process data sizes of every slave and compares
+them with the sizes, which the driver expects. A mismatch fails the bus start
+with a message instead of tripping an assert in the cyclic path later.
 
 
 LIMITATIONS
