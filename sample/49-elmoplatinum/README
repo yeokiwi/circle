@@ -1,0 +1,166 @@
+README
+
+This sample program uses a Raspberry Pi as a raw SOEM (Simple Open EtherCAT
+Master) master, which controls a single Elmo Platinum servo drive directly
+over CoE (CANopen over EtherCAT), with explicit control over every AL state
+transition. It is console-only: all status and debug output goes to the
+serial interface, there is no web page and no second Ethernet port.
+
+	+-------------------+  eth0 (raw EtherCAT frames)  +--------------+
+	|  Raspberry Pi     |----------------------------->| Elmo Platinum|
+	|  (Circle + SOEM)  |                              | drive        |
+	+-------------------+                              +--------------+
+
+Unlike sample/48-elmoweb, this sample does NOT use the JSD library. JSD's
+jsd_init() brings the bus from INIT to OPERATIONAL internally and does not
+expose the individual state transitions. This sample instead calls the SOEM
+"ecx_*" API directly, the same way sample/47-ethercatweb does, so that the
+state machine sequence required by this application is explicit in the code:
+
+	INIT -> PRE_OP -> (configure the drive via CoE/SDO) -> SAFE_OP
+	     -> wait 5 ms -> OPERATIONAL -> CiA 402 enable sequence
+
+	!!! THIS PROGRAM CAN MOVE A MOTOR (a small demo move by default). !!!
+	!!! READ THE SAFETY SECTION BELOW BEFORE YOU CONNECT A DRIVE.     !!!
+
+Required hardware:
+
+	* A Raspberry Pi with an on-board Ethernet controller (e.g. CM5)
+	* One Elmo Platinum drive, connected to the on-board Ethernet port
+	* A serial USB adapter (3.3V level) or a Raspberry Pi Debug Probe, to
+	  read the debug output (see "DEBUG OUTPUT" below)
+
+Do not connect the EtherCAT port to your office network. The EtherCAT master
+sends raw Ethernet frames to this port and there is no IP stack behind it.
+
+
+BUILD
+
+Download and build the SOEM library first, as described in the file
+addon/soem/README:
+
+	cd addon/soem
+	git clone https://github.com/OpenEtherCATsociety/SOEM.git
+	make
+
+Then build this sample as usual:
+
+	cd sample/49-elmoplatinum
+	make
+
+If the library libsoem.a has not been built, the build of this sample is
+skipped with a message, so that a build of all samples does not fail.
+
+
+BEFORE YOU START: SAFETY
+
+	ELMO_ENABLE_DEMO_MOTION		1 by default (see elmoplatinum.h)
+	ELMO_DEMO_VELOCITY_CPS		1000 counts/s (intentionally very slow)
+	ELMO_DEMO_MOVE_MS		2000 ms
+	ELMO_MAX_PROFILE_VELOCITY	5000 counts/s (object 0x607F)
+	ELMO_PROFILE_ACCEL/DECEL	10000 counts/s^2 (objects 0x6083/0x6084)
+
+Once the drive reaches "Operation enabled", this sample runs a single,
+bounded demo motion (a short, slow Profile Velocity move, then it commands
+velocity 0 and stops - it is not a continuous jog). ADAPT THESE VALUES TO
+YOUR MOTOR before you connect one, or set ELMO_ENABLE_DEMO_MOTION to 0 in
+elmoplatinum.h, if you only want to test the EtherCAT/CiA 402 state machine
+without commanding any motion at all.
+
+	THERE IS NO WEB INTERFACE AND NO WATCHDOG-DRIVEN INTERLOCK HERE, since
+	there is no remote control surface. The demo motion is one-shot,
+	bounded in time and speed, and disableable at compile time.
+
+This sample has never been tested against real Elmo hardware.
+
+
+WHAT IT DOES
+
+The on-board Ethernet device (net device 0) is used for EtherCAT. The class
+CElmoPlatinumMaster (see elmoplatinum.h/.cpp) runs the master in its own
+task:
+
+1. ecx_init() opens the net device, ecx_config_init() brings every slave from
+   INIT to PRE_OP. The PRE_OP state is explicitly verified and logged before
+   any configuration is attempted.
+2. While the slave is in PRE_OP, its identity is read (SII vendor ID/product
+   code, CoE objects 0x1008/0x1009/0x100A) and logged, and the drive is then
+   configured via CoE/SDO writes (ConfigureDrive() in elmoplatinum.cpp):
+	- RxPDO 0x1600: Controlword (0x6040) + Target velocity (0x60FF)
+	- TxPDO 0x1A00: Statusword (0x6041) + Velocity actual value (0x606C)
+	- PDO assignment via 0x1C12/0x1C13
+	- Mode of operation (0x6060) = 3 (Profile Velocity)
+	- Conservative motion limits (0x607F, 0x6083, 0x6084)
+   These are standard CiA 402 (DS402) objects, not Elmo-specific ones.
+3. ecx_config_map_group() maps the process data just configured, which also
+   drives the PRE_OP -> SAFE_OP transition. This is explicitly verified and
+   logged.
+4. The master then explicitly waits 5 ms (SAFE_OP_TO_OPERATIONAL_DELAY_US in
+   elmoplatinum.cpp) before requesting the OPERATIONAL state, exchanging
+   process data continuously while it waits for the transition to complete
+   (some drives require this).
+5. Once OPERATIONAL, the cyclic process data loop decodes the drive's
+   statusword (object 0x6041) into its CiA 402 state and drives the standard
+   enable sequence (Shutdown -> Switch On -> Enable Operation) by writing the
+   controlword (object 0x6040). Once "Operation enabled" is reached, the
+   bounded demo motion described above runs once.
+6. The system log shows the master and drive state every 10 seconds too.
+
+
+DEBUG OUTPUT
+
+The debug messages (the Circle system log) are written to the serial
+interface, so that the application can be troubleshooted while it is
+running. On the Raspberry Pi 5 the dedicated 3-pin UART connector is used,
+served by uart10 (serial device 10 in Circle, "ttyS11"). Other Raspberry Pi
+models use the UART on GPIO14/15. The settings are 115200 baud, 8 data bits,
+no parity, 1 stop bit, defined in kernel.h (SERIAL_DEVICE_NUMBER and
+SERIAL_BAUD_RATE).
+
+Connect a serial USB adapter (3.3V level) or a Raspberry Pi Debug Probe to
+the UART connector and open a terminal program (e.g. putty, minicom or
+"screen /dev/ttyUSB0 115200") on your development machine.
+
+The following options can be added to cmdline.txt on the SD card:
+
+	loglevel=4	log level: 0 (panic) to 4 (debug, this is the default)
+	logtarget=...	write the log messages to another registered device
+
+The serial driver is used in interrupt driven mode, so that writing a debug
+message does not stall the EtherCAT cycle until the characters have been
+sent. The messages are buffered instead; increase the baud rate or the
+system option SERIAL_BUF_SIZE (see include/circle/sysconfig.h), if a lot of
+messages are logged in a short time.
+
+The output looks like this:
+
+	00:00:02.14 kernel: Compile time: Aug 17 2026 09:12:33
+	00:00:02.15 elmo: Elmo Platinum master starting on eth0 (cycle time 4000 us)
+	00:00:02.31 elmo: 1 slave(s) found, slave 1 is in PRE_OP, configuring the drive
+	00:00:02.31 elmo: slave[1] "EPD" vendor 0x9A product 0x100002: Elmo Platinum drive
+	00:00:02.35 elmo: Drive configured: Profile Velocity mode, max velocity 5000 counts/s
+	00:00:02.40 elmo: Slave reached SAFE_OP (6 byte(s) out, 6 byte(s) in, expected WKC 3)
+	00:00:02.40 elmo: Waiting 5000 us before requesting OPERATIONAL
+	00:00:02.60 elmo: Slave is operational
+	00:00:02.60 elmo: Drive state: Switch on disabled (statusword 0x0250)
+	00:00:02.61 elmo: Drive state: Ready to switch on (statusword 0x0231)
+	00:00:02.61 elmo: Drive state: Switched on (statusword 0x0233)
+	00:00:02.62 elmo: Drive state: Operation enabled (statusword 0x0237)
+	00:00:03.12 elmo: Starting demo motion: target velocity 1000 counts/s for 2000 ms
+	00:00:05.12 elmo: Demo motion done, actual velocity 998 counts/s
+	00:00:12.15 kernel: EtherCAT: OPERATIONAL, drive: Operation enabled, WKC 3 of 3, ...
+
+
+NOTES
+
+The scheduler of Circle is cooperative and non-preemptive. The 5 ms wait
+between SAFE_OP and OPERATIONAL, and the cyclic process data exchange, use
+CScheduler::usSleep(), which yields to other tasks, so other work in the
+application is not blocked while waiting.
+
+If the link is down or the slave is not found, the master retries every
+5 seconds. If the connection to the slave is lost while OPERATIONAL, the
+master re-scans and re-configures the bus from PRE_OP again.
+
+This sample assumes a single slave (slave 1) on the bus and does not scan
+for or identify multiple drives, unlike sample/48-elmoweb.

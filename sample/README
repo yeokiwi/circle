@@ -47,6 +47,7 @@ SAMPLES
 46-dualethernet	[5]	Two independent TCP/IP stacks, on the on-board Ethernet port and on a USB Ethernet device
 47-ethercatweb	[5]	EtherCAT master (SOEM) on the on-board Ethernet port, status web server on a second port (requires addon/soem)
 48-elmoweb	[5]	Elmo servo drive control with JSD over EtherCAT, with status and control web interface (requires addon/soem and addon/jsd)
+49-elmoplatinum	[5]	Raw SOEM EtherCAT master for a single Elmo Platinum drive, with explicit PRE_OP/SAFE_OP/OPERATIONAL control and CiA 402 enable sequence, debug output over serial only (requires addon/soem)
 
 Samples marked with [PnP] are enabled for USB plug-and-play.
 Samples marked with [5] are working on the Raspberry Pi 5.
