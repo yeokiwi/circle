@@ -321,7 +321,11 @@ boolean CElmoPlatinumMaster::Configure (void)
 		return FALSE;
 	}
 
-	ecx_configdc (m_pContext);
+	// Distributed Clocks are intentionally not configured here (no
+	// ecx_configdc() call): ConfigureDrive() above already forced the drive's
+	// sync managers into Free Run mode via 0x1C32/0x1C33, so there is nothing
+	// for it to do, and leaving it in would be misleading (see the comment in
+	// ConfigureDrive() for why Free Run is used instead of DC-Sync1).
 
 	// explicitly verify and log the SAFE_OP state
 	ecx_statecheck (m_pContext, 0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE);
@@ -537,6 +541,37 @@ boolean CElmoPlatinumMaster::ConfigureDrive (void)
 		SetError ("Cannot activate PDO assignment");
 
 		return FALSE;
+	}
+
+	// Force Free Run mode (no Distributed Clocks) on sync managers 2 (outputs)
+	// and 3 (inputs) via objects 0x1C32:01 / 0x1C33:01 ("Synchronization Type":
+	// 0x0000 Free Run, 0x0001 SM-Synchron, 0x0002 DC-Sync0, 0x0003 DC-Sync1).
+	// Elmo Platinum drives default SM3 to DC-Sync1, which then requires the
+	// master to program a real Sync1 cycle time via ecx_dcsync01() before the
+	// slave accepts OPERATIONAL (AL status 0x2D, "DC Sync1 Cycle Time",
+	// otherwise). This Circle SOEM port has no real SYNC0/SYNC1 pulse hardware
+	// and does not discipline the Pi's clock to the DC master clock (see
+	// addon/soem/README), so genuine DC-synchronous operation is not really
+	// available here; Free Run matches what CyclicProcess() already does (a
+	// free-running software poll loop) and sidesteps the issue entirely.
+	// Best-effort: some firmware may already default to Free Run or expose
+	// these objects read-only, so a failed write is only logged, not fatal.
+	u16 nSyncType = 0x0000;	// Free Run
+	nSize = sizeof nSyncType;
+	if (   ecx_SDOwrite (m_pContext, nSlave, 0x1C32, 0x01, FALSE, nSize, &nSyncType,
+			     nTimeout) <= 0
+	    || ecx_SDOwrite (m_pContext, nSlave, 0x1C33, 0x01, FALSE, nSize, &nSyncType,
+			     nTimeout) <= 0)
+	{
+		CLogger::Get ()->Write (FromElmo, LogWarning,
+			"Cannot force Free Run mode via 0x1C32/0x1C33, the drive may "
+			"require Distributed Clocks to reach OPERATIONAL");
+	}
+	else
+	{
+		CLogger::Get ()->Write (FromElmo, LogNotice,
+			"Forced Free Run mode (no Distributed Clocks) on sync managers "
+			"2 and 3");
 	}
 
 	// select the Profile Velocity mode of operation (object 0x6060). This is

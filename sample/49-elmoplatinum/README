@@ -89,6 +89,8 @@ task:
 	- RxPDO 0x1600: Controlword (0x6040) + Target velocity (0x60FF)
 	- TxPDO 0x1A00: Statusword (0x6041) + Velocity actual value (0x606C)
 	- PDO assignment via 0x1C12/0x1C13
+	- Free Run mode (no Distributed Clocks) forced on sync managers 2/3
+	  via 0x1C32:01/0x1C33:01 (see TROUBLESHOOTING below)
 	- Mode of operation (0x6060) = 3 (Profile Velocity)
 	- Conservative motion limits (0x607F, 0x6083, 0x6084)
    These are standard CiA 402 (DS402) objects, not Elmo-specific ones.
@@ -138,6 +140,7 @@ The output looks like this:
 	00:00:02.15 elmo: Elmo Platinum master starting on eth0 (cycle time 4000 us)
 	00:00:02.31 elmo: 1 slave(s) found, slave 1 is in PRE_OP, configuring the drive
 	00:00:02.31 elmo: slave[1] "EPD" vendor 0x9A product 0x100002: Elmo Platinum drive
+	00:00:02.33 elmo: Forced Free Run mode (no Distributed Clocks) on sync managers 2 and 3
 	00:00:02.35 elmo: Drive configured: Profile Velocity mode, max velocity 5000 counts/s
 	00:00:02.40 elmo: Slave reached SAFE_OP (6 byte(s) out, 6 byte(s) in, expected WKC 3)
 	00:00:02.40 elmo: Waiting 5000 us before requesting OPERATIONAL
@@ -149,6 +152,35 @@ The output looks like this:
 	00:00:03.12 elmo: Starting demo motion: target velocity 1000 counts/s for 2000 ms
 	00:00:05.12 elmo: Demo motion done, actual velocity 998 counts/s
 	00:00:12.15 kernel: EtherCAT: OPERATIONAL, drive: Operation enabled, WKC 3 of 3, ...
+
+
+TROUBLESHOOTING
+
+If the bus reaches SAFE_OP but fails to reach OPERATIONAL, the log shows the
+EtherCAT AL status code and its string, e.g.:
+
+	elmo: Slave not operational (state 0x04, AL status 0x002D: DC Sync1 Cycle Time)
+
+AL status 0x2D ("DC Sync1 Cycle Time") means the drive's Sync Manager 3
+(inputs) was configured by its own default ESI/firmware to synchronize to
+Distributed Clocks SYNC1 (CoE object 0x1C33:01 = 0x0003), and no valid Sync1
+cycle time was ever programmed by the master. This is a common default on
+Elmo drives. This sample avoids the problem instead of solving it "properly":
+ConfigureDrive() forces both sync managers into Free Run mode (0x1C32:01 and
+0x1C33:01 = 0x0000) while the slave is still in PRE_OP, so the drive never
+expects Distributed Clocks in the first place, and ecx_configdc() is not
+called at all. This is a deliberate choice, not just a shortcut: this Circle
+SOEM port does not generate real SYNC0/SYNC1 hardware pulses and does not
+discipline the Raspberry Pi's clock to the DC master clock (see
+addon/soem/README, "REQUIREMENTS AND LIMITATIONS"), so genuine DC-synchronous
+drive operation is not meaningfully available on this cooperative-scheduler,
+non-realtime master anyway. Free Run matches what CyclicProcess() already
+does - a free-running software poll loop - so forcing it is both simpler and
+more honest about what this master can actually deliver.
+
+If the Free Run override itself fails (logged as a warning, not a fatal
+error, since some firmware may expose 0x1C32/0x1C33 read-only), the drive may
+still require Distributed Clocks; check the AL status again to confirm.
 
 
 NOTES
