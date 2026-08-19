@@ -28,6 +28,7 @@
 #include <circle/sched/scheduler.h>
 #include <circle/sched/task.h>
 #include <circle/sched/mutex.h>
+#include <circle/multicore.h>
 #include <circle/logger.h>
 #include <circle/string.h>
 #include <circle/alloc.h>
@@ -35,6 +36,25 @@
 #include <circle/types.h>
 #include <stdarg.h>
 #include <assert.h>
+
+// CScheduler::IsActive() is a global check (is a CScheduler instance
+// constructed anywhere?), not a per-core one. On a multi-core system, where
+// the scheduler is legitimately used on core 0 (e.g. by networking tasks),
+// this OSAL must not use the scheduler, CMutex or CTask when it is called
+// from a different core, because those are only safe on core 0 (see
+// doc/multicore.txt). CMultiCoreSupport::ThisCore() is only available, when
+// ARM_ALLOW_MULTI_CORE is defined.
+static inline boolean UseScheduler (void)
+{
+#ifdef ARM_ALLOW_MULTI_CORE
+	if (CMultiCoreSupport::ThisCore () != 0)
+	{
+		return FALSE;
+	}
+#endif
+
+	return CScheduler::IsActive ();
+}
 
 #define NSEC_PER_SEC	1000000000L
 #define NSEC_PER_USEC	1000L
@@ -125,7 +145,7 @@ ec_boolean osal_timer_is_expired (osal_timert *self)
 
 int osal_usleep (uint32 usec)
 {
-	if (CScheduler::IsActive ())
+	if (UseScheduler ())
 	{
 		if (usec == 0)
 		{
@@ -217,7 +237,7 @@ unsigned CSOEMTask::s_nNextID = 0;
 
 static int CreateTask (void *thandle, int stacksize, void *func, void *param)
 {
-	if (   !CScheduler::IsActive ()
+	if (   !UseScheduler ()
 	    || func == 0)
 	{
 		return 0;
@@ -259,7 +279,7 @@ int osal_thread_create_rt (void *thandle, int stacksize, void *func, void *param
 
 void *osal_mutex_create (void)
 {
-	if (!CScheduler::IsActive ())
+	if (!UseScheduler ())
 	{
 		return 0;
 	}

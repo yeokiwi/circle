@@ -1,0 +1,266 @@
+README
+
+This sample program uses a Raspberry Pi with two Ethernet ports as EtherCAT
+master and publishes the status of the EtherCAT network to a ZeroMQ broker on
+the second Ethernet port. It also receives Start/Stop commands from the
+broker to request or pause the OPERATIONAL state of the bus.
+
+Unlike sample/47-ethercatweb, the EtherCAT master runs on its own CPU core
+(core 1), completely separate from the Circle scheduler, so that it is
+isolated from the networking / ZeroMQ side, which runs on core 0 like all
+other Circle networking code.
+
+	+-------------------+  eth0 (raw EtherCAT frames)  +--------------+
+	|  Raspberry Pi      |----------------------------->| EtherCAT     |
+	|  core 1: EtherCAT  |                              | slave(s)     |
+	|  (SOEM, no sched.) |                              +--------------+
+	|                    |
+	|  core 0: CScheduler |  eth1 (TCP/IP, ZeroMQ)      +--------------+
+	|  (ZeroMQ client)   |----------------------------->| ZeroMQ       |
+	+-------------------+                               | broker       |
+	                                                     +--------------+
+
+The EtherCAT master is implemented with SOEM (Simple Open EtherCAT Master) by
+the OpenEtherCATsociety. SOEM is not part of Circle and has to be downloaded
+before this sample can be built (see below).
+
+Required hardware:
+
+	* A Raspberry Pi with an on-board Ethernet controller (e.g. CM5), which
+	  also supports multi-core operation (Raspberry Pi 2/3/4/5)
+	* One or more EtherCAT slaves, connected to the on-board Ethernet port
+	* A USB Ethernet device with a CDC Ethernet (ECM) interface, for
+	  instance based on a Realtek RTL815x chip, connected to your network
+	  with a DHCP server and reachable from the machine running the ZeroMQ
+	  broker. On the Raspberry Pi 5 it has to be attached to a root port
+	  directly, because USB 3 hubs are not supported.
+
+Do not connect the EtherCAT port to your office network. The EtherCAT master
+sends broadcast frames to this port and there is no IP stack behind it.
+
+
+BUILD
+
+This sample requires multi-core support, which is not enabled in a default
+build of Circle. Reconfigure the toolchain first (repeat any options you
+already used, e.g. -r for the Raspberry Pi model, --prefix, ... - see
+"./configure --help"):
+
+	./configure --multicore [your other options]
+
+This adds "DEFINE += -DARM_ALLOW_MULTI_CORE" to Config.mk. It affects every
+sample/app you build afterwards, not just this one.
+
+Download and build the SOEM library, as described in the file
+addon/soem/README:
+
+	cd addon/soem
+	git clone https://github.com/OpenEtherCATsociety/SOEM.git
+	make
+
+This also builds the OSAL patch, which makes SOEM's OSAL layer (osal.cpp)
+aware of which core it is running on: CScheduler::IsActive() alone cannot
+tell, because the ZeroMQ client legitimately keeps the scheduler alive on
+core 0, while SOEM itself is only ever called from core 1 in this sample. If
+this patch were missing, SOEM would try to use CScheduler/CMutex/CTask from
+core 1, which is unsafe (see doc/multicore.txt). No change of behaviour
+results for sample/47-ethercatweb, 48-elmoweb or 49-elmoplatinum, which only
+ever call SOEM from core 0.
+
+Then build this sample as usual:
+
+	cd sample/50-ethercatzmq
+	make
+
+If the library libsoem.a has not been built, the build of this sample is
+skipped with a message, so that a build of all samples does not fail.
+
+
+WHAT IT DOES
+
+* The on-board Ethernet device (net device 0, "eth0") is used by the
+  EtherCAT master directly, exactly as in sample/47-ethercatweb. The class
+  CEtherCATCore1Master (see ethercat_core1.h) implements the same state
+  machine as CEtherCATMaster there (bus scan, CoE identity read, process
+  data mapping, distributed clocks, OPERATIONAL), but its Run() method is
+  called directly from CMultiCoreSupport::Run(1) (see kernel.h/.cpp) instead
+  of being a CTask. It is the only code, which ever touches this net device
+  or the SOEM context, so it needs no locking of its own for that; its
+  status snapshot and its command slot, which are the only state shared with
+  core 0, are protected with CSpinLock instead of CMutex.
+
+* The second Ethernet device (net device 1, "eth1") runs a TCP/IP stack,
+  which gets its IP address via DHCP, on core 0. CZeroMQClient (see
+  zmqclient.h) is a CTask, which connects to a ZeroMQ broker and:
+
+	- publishes a JSON status message every 500 ms (see
+	  ZMQ_STATUS_INTERVAL_MS in kernel.h), with the same field names as
+	  the /status.json endpoint of sample/47-ethercatweb's web server,
+	- receives Start/Stop commands from the broker and forwards them to
+	  the EtherCAT master (CEtherCATCore1Master::SubmitCommand()).
+
+  A Stop command requests the SAFE_OP state (outputs stop, but the mailbox
+  and distributed clocks stay alive, so the bus is fast to resume). A Start
+  command re-requests OPERATIONAL. The bus is OPERATIONAL by default at
+  startup, exactly as in sample/47-ethercatweb, until a Stop command is
+  received.
+
+The process data is only read by this sample. If you want to control the
+outputs of a slave, extend CEtherCATCore1Master to write to the buffer
+returned in the field "outputs" of the group (ctx->grouplist[0].outputs)
+before the process data is sent in CyclicProcess().
+
+
+THE ZEROMQ PROTOCOL
+
+This sample hand-writes a minimal ZMTP 3.0 client (see zmtp.h/.cpp), because
+there is no way to use the full libzmq library on Circle (it depends on
+POSIX threads and BSD sockets, which do not exist here). The implementation
+covers exactly what this sample needs and nothing more:
+
+	* only the NULL security mechanism (no PLAIN, no CURVE),
+	* only the DEALER role, talking to a ROUTER-based broker.
+
+This means it will NOT interoperate out of the box with a plain
+zmq.PUB/zmq.SUB pair or a stock XPUB/XSUB proxy broker, because those need
+SUBSCRIBE/CANCEL topic-filter frames, which are not implemented. It works
+with any ROUTER-based broker, which is a completely standard ZeroMQ role
+(e.g. a small custom Python script, see below).
+
+Two message "topics" are multiplexed over the one DEALER<->ROUTER
+connection, distinguished by the first frame of a multipart message:
+
+	["status",  <JSON>]	sent periodically, device -> broker
+	["command", <JSON>]	received asynchronously, broker -> device,
+				body is {"cmd":"start"} or {"cmd":"stop"}
+
+The hand-written ZMTP greeting has been checked against RFC 23
+(https://rfc.zeromq.org/spec/23/), but was not validated against a packet
+capture of a real libzmq peer. Verify it against your actual broker (e.g.
+with Wireshark's ZMTP dissector) before relying on it in an important setup.
+
+A minimal Python test broker, which exercises this protocol end-to-end
+(requires "pip install pyzmq"):
+
+	import zmq, json
+
+	ctx = zmq.Context()
+	sock = ctx.socket(zmq.ROUTER)
+	sock.bind("tcp://*:5555")
+
+	poller = zmq.Poller()
+	poller.register(sock, zmq.POLLIN)
+
+	while True:
+	    events = dict(poller.poll(200))
+	    if sock in events:
+	        identity, msgtype, payload = sock.recv_multipart()
+	        if msgtype == b"status":
+	            print(json.loads(payload))
+	        # ignore other message types
+
+	    # type "start" or "stop" + Enter on stdin (non-blocking check
+	    # omitted here for brevity; use e.g. a background thread reading
+	    # stdin and calling sock.send_multipart(
+	    #     [identity, b"command", json.dumps({"cmd": cmd}).encode()])
+
+
+CONFIGURATION
+
+The used net devices, the cycle time and the ZeroMQ broker address are
+defined in kernel.h:
+
+	ETHERCAT_NET_DEVICE		net device for EtherCAT (default 0)
+	ZMQ_NET_DEVICE			net device for the ZeroMQ client (default 1)
+	ETHERCAT_CYCLE_TIME_US		process data cycle time (default 4000 us)
+	ZMQ_BROKER_HOST_DEFAULT	default ZeroMQ broker host
+	ZMQ_BROKER_PORT_DEFAULT	default ZeroMQ broker port (default 5555)
+	ZMQ_STATUS_INTERVAL_MS		interval of the status messages (default 500 ms)
+
+The on-board Ethernet device is initialized before the USB host controller in
+CKernel::Initialize(), so that it becomes net device 0 and the USB Ethernet
+device becomes net device 1. See doc/multiple-net-devices.txt for details.
+
+The broker address can be overridden without rebuilding, using these options
+in cmdline.txt on the SD card:
+
+	zmqbroker=192.168.1.10		ZeroMQ broker host name or IP address
+	zmqport=5555			ZeroMQ broker port
+
+The number of slaves kept in the status and the size of the process data
+image are defined in ethercat_core1.h (ETHERCAT_MAX_SLAVES and
+ETHERCAT_IOMAP_SIZE). The maximum number of slaves on the bus is defined as
+EC_MAXSLAVE in addon/soem/include/soem/ec_options.h.
+
+
+DEBUG OUTPUT
+
+The debug messages (the Circle system log) are written to the serial
+interface, so that the application can be troubleshooted, while it is
+running. On the Raspberry Pi 5 the dedicated 3-pin UART connector is used,
+served by uart10 (serial device 10 in Circle, "ttyS11"). Other Raspberry Pi
+models use the UART on GPIO14/15. Settings: 115200 baud, 8 data bits, no
+parity, 1 stop bit, defined in kernel.h (SERIAL_DEVICE_NUMBER and
+SERIAL_BAUD_RATE).
+
+The following options can be added to cmdline.txt on the SD card:
+
+	loglevel=4	log level: 0 (panic) to 4 (debug, this is the default)
+	logtarget=tty1	write the log messages to the screen (HDMI) instead
+	logtarget=ttyS11 write them to the UART connector (this is the default)
+
+The output looks like this:
+
+	00:00:02.14 kernel: Compile time: Aug 19 2026 09:12:33
+	00:00:02.14 kernel: 2 net device(s) available
+	00:00:02.15 ethercat: EtherCAT master starting on eth0 (cycle time 4000 us)
+	00:00:02.31 ethercat: 3 slave(s) found
+	00:00:03.02 ethercat: Process data mapped: 1 byte(s) out, 2 byte(s) in, expected WKC 5
+	00:00:03.24 ethercat: All slaves are operational
+	00:00:04.01 zmqclient: Connected to broker 192.168.1.10:5555
+	00:00:12.15 kernel: EtherCAT: OPERATIONAL, 3 slave(s), WKC 5 of 5, 2412 cycle(s)
+
+Sending {"cmd":"stop"} from the test broker to the device (as the "command"
+message described above) shows:
+
+	00:01:00.00 ethercat: Stop requested, transitioning to SAFE_OP
+
+...and the "state" field of the next status message changes from
+"OPERATIONAL" to "Stopped". Sending {"cmd":"start"} shows the reverse
+transition and "state" goes back to "OPERATIONAL".
+
+To see the internal debug messages of SOEM too, build the SOEM library with:
+
+	cd addon/soem
+	make clean
+	make EC_DEBUG=1
+
+These messages are written with the log level LogDebug and are very verbose.
+
+
+NOTES
+
+Core 1 runs the EtherCAT cyclic loop directly, without the Circle scheduler:
+it uses CTimer::SimpleusDelay() to pace the cycle instead of
+CScheduler::usSleep(), and it is the exclusive owner of the SOEM context, the
+on-board net device and the process data image, so it needs no locking for
+those. Only its status snapshot (read by the ZeroMQ client) and its command
+slot (written by the ZeroMQ client) are shared across cores, and both are
+protected with CSpinLock. Do not add any other cross-core sharing to
+CEtherCATCore1Master without the same care: CScheduler, CTask, CMutex, and
+the CSocket/CNetSubSystem based networking stack are only safe on core 0
+(see doc/multicore.txt).
+
+Cycle times below one millisecond are not recommended, same as for
+sample/47-ethercatweb. There is no synchronization of the system time of the
+Raspberry Pi to the distributed clock of the EtherCAT network.
+
+If no slaves are found or the Ethernet link is down, the master scans the
+bus again every five seconds; a pending Stop command is remembered across a
+rescan, so the bus stays in SAFE_OP, once it reconnects. If the connection to
+the broker is lost, the ZeroMQ client retries every five seconds.
+
+A Stop command targets SAFE_OP, not INIT, so it does not fully de-energize
+the slave outputs or drop the mailbox/CoE context (which would need a full
+CEtherCATCore1Master::Configure() to resume). If your slave hardware needs a
+harder stop, extend HandleCommand() in ethercat_core1.cpp accordingly.
