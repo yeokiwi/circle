@@ -28,6 +28,8 @@ OBJS	= main.o kernel.o elmo_core1.o zmqclient.o zmtp.o
 
 LIBS	= $(SOEMLIBHOME)/libsoem.a \
 	  $(CIRCLEHOME)/lib/usb/libusb.a \
+	  $(CIRCLEHOME)/lib/input/libinput.a \
+	  $(CIRCLEHOME)/lib/fs/libfs.a \
 	  $(CIRCLEHOME)/lib/net/libnet.a \
 	  $(CIRCLEHOME)/lib/sched/libsched.a \
 	  $(CIRCLEHOME)/lib/libcircle.a
