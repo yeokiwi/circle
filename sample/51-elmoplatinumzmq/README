@@ -1,0 +1,366 @@
+README
+
+This sample program uses a Raspberry Pi with two Ethernet ports as a raw SOEM
+(Simple Open EtherCAT Master) master for a single Elmo Platinum servo drive.
+The drive is armed and disarmed remotely, over a ZeroMQ broker on the second
+Ethernet port, instead of running any built-in demo motion. The EtherCAT/CiA
+402 drive control runs on its own CPU core, isolated from the ZeroMQ client.
+
+	+-------------------+  eth0 (raw EtherCAT frames)  +--------------+
+	|  Raspberry Pi       |----------------------------->| Elmo Platinum|
+	|  core 1: EtherCAT   |                              | drive        |
+	|  + CiA 402 (SOEM,   |                              +--------------+
+	|    no scheduler)    |
+	|                     |
+	|  core 0: CScheduler |  eth1 (TCP/IP, ZeroMQ)       +--------------+
+	|  (ZeroMQ client)    |----------------------------->| ZeroMQ       |
+	+-------------------+                                | broker       |
+	                                                      +--------------+
+
+	!!! THIS PROGRAM CAN MOVE A MOTOR, once armed over ZeroMQ.        !!!
+	!!! READ THE SAFETY SECTION BELOW BEFORE YOU CONNECT A DRIVE.     !!!
+
+This merges two other samples: the core-isolated EtherCAT/ZeroMQ split of
+sample/50-ethercatzmq (see that sample's README for the general architecture
+rationale) with the raw SOEM/CiA 402 Elmo Platinum drive control of
+sample/49-elmoplatinum (see that sample's README for the DS402 state-machine
+background). Both of those samples are untouched, unrelated references; this
+is a new, separate sample.
+
+Required hardware:
+
+	* A Raspberry Pi with an on-board Ethernet controller (e.g. CM5), which
+	  also supports multi-core operation (Raspberry Pi 2/3/4/5)
+	* One Elmo Platinum drive, connected to the on-board Ethernet port
+	* A USB Ethernet device with a CDC Ethernet (ECM) interface, for
+	  instance based on a Realtek RTL815x chip, connected to your network
+	  with a DHCP server and reachable from the machine running the ZeroMQ
+	  broker. On the Raspberry Pi 5 it has to be attached to a root port
+	  directly, because USB 3 hubs are not supported.
+	* A serial USB adapter (3.3V level) or a Raspberry Pi Debug Probe, to
+	  read the debug output (see "DEBUG OUTPUT" below)
+
+Do not connect the EtherCAT port to your office network. The EtherCAT master
+sends raw Ethernet frames to this port and there is no IP stack behind it.
+
+
+BEFORE YOU START: SAFETY
+
+Unlike sample/49-elmoplatinum (which runs a small, bounded demo move
+automatically once "Operation enabled" is reached), this sample never
+commands any motion on its own, and the drive is **disarmed by default at
+boot**:
+
+	* The EtherCAT bus is always brought up to OPERATIONAL automatically
+	  (process data has to flow either way), but the drive itself is held
+	  in the CiA 402 "Ready to switch on" state (controlword Shutdown,
+	  0x0006) until an explicit `{"cmd":"start"}` is received over ZeroMQ.
+	* "start" arms the drive: it runs the CiA 402 enable ladder up to
+	  "Operation enabled" (power stage enabled), but the target velocity
+	  is always written as 0 - there is no velocity-command message in
+	  this sample, so no motion is ever actually commanded.
+	* "stop" disarms the drive: it writes the standard DS402 "Shutdown"
+	  controlword (0x0006), landing the drive back in "Ready to switch
+	  on" (power stage disabled, motor de-energized/coasting). This is
+	  **not** the distinct DS402 "Quick Stop" function (which needs CoE
+	  objects 0x605A/0x6085 configured and a different controlword bit
+	  pattern) - it is a plain, unconditional disable, not a
+	  safety-rated or ramped stop. Do not rely on it as an emergency stop.
+
+Even though target velocity is always 0, an armed drive ("Operation
+enabled") is a live power stage: depending on your motor/drive
+configuration it may actively hold position/resist being turned by hand.
+Treat "armed" as "the motor could move" at all times.
+
+There is no watchdog-driven interlock and no velocity-command path in this
+sample - "start"/"stop" only arm/disarm the CiA 402 state machine. This
+sample has never been tested against real Elmo hardware.
+
+
+BUILD
+
+This sample requires multi-core support, which is not enabled in a default
+build of Circle. Reconfigure the toolchain first (repeat any options you
+already used, e.g. -r for the Raspberry Pi model, --prefix, ... - see
+"./configure --help"):
+
+	./configure --multicore [your other options]
+
+This adds "DEFINE += -DARM_ALLOW_MULTI_CORE" to Config.mk. It affects every
+sample/app you build afterwards, not just this one.
+
+Download and build the SOEM library, as described in the file
+addon/soem/README:
+
+	cd addon/soem
+	git clone https://github.com/OpenEtherCATsociety/SOEM.git
+	make
+
+This also builds the OSAL patch (already applied in this repository), which
+makes SOEM's OSAL layer (osal.cpp) aware of which core it is running on -
+see sample/50-ethercatzmq/README's BUILD section for why this is needed. No
+further change to osal.cpp is required for this sample: ecx_SDOwrite()/
+ecx_SDOread() (used heavily by ConfigureDrive() below) go through the same
+already-patched OSAL path as ecx_config_init()/ecx_statecheck().
+
+Then build this sample as usual:
+
+	cd sample/51-elmoplatinumzmq
+	make
+
+If the library libsoem.a has not been built, the build of this sample is
+skipped with a message, so that a build of all samples does not fail.
+
+
+WHAT IT DOES
+
+* The on-board Ethernet device (net device 0, "eth0") is used for EtherCAT.
+  The class CElmoPlatinumCore1Master (see elmo_core1.h/.cpp) implements the
+  same raw SOEM/CiA 402 bring-up as sample/49-elmoplatinum's
+  CElmoPlatinumMaster, but its Run() method is called directly from
+  CMultiCoreSupport::Run(1) (see kernel.h/.cpp) instead of being a CTask,
+  exactly like sample/50-ethercatzmq's CEtherCATCore1Master:
+
+	1. ecx_init()/ecx_config_init() bring the slave from INIT to PRE_OP.
+	2. While in PRE_OP, the slave's identity is read and logged (vendor
+	   0x9A / product 0x100002 or 0x01100002 is recognized as an Elmo
+	   Platinum drive; other slaves are logged as unrecognized but still
+	   configured on a best-effort basis), then ConfigureDrive() writes
+	   the CoE/SDO configuration:
+		- RxPDO 0x1600: Controlword (0x6040) + Target velocity (0x60FF)
+		- TxPDO 0x1A00: Statusword (0x6041) + Velocity actual value (0x606C)
+		- PDO assignment via 0x1C12/0x1C13
+		- Free Run mode forced on sync managers 2/3 via 0x1C32:01/
+		  0x1C33:01 (see TROUBLESHOOTING below)
+		- Mode of operation (0x6060) = 3 (Profile Velocity)
+		- Conservative motion limits (0x607F, 0x6083, 0x6084)
+	3. ecx_config_map_group() maps the process data, driving PRE_OP -> SAFE_OP.
+	4. An explicit 5 ms delay (SAFE_OP_TO_OPERATIONAL_DELAY_US), then the
+	   bus is unconditionally requested to OPERATIONAL - this happens
+	   regardless of whether the drive is armed, because reaching
+	   OPERATIONAL is a bus-level (AL state) concept, while arming is a
+	   drive-level (CiA 402) concept driven independently every cycle.
+	5. Once OPERATIONAL, the cyclic loop decodes the drive's statusword
+	   into its CiA 402 state and drives the controlword every cycle,
+	   gated by the current armed/disarmed intent (see below).
+
+  Cross-core touch points are limited to GetStatus() and SubmitCommand(),
+  both CSpinLock-protected, same pattern as sample/50-ethercatzmq.
+
+* The second Ethernet device (net device 1, "eth1") runs a TCP/IP stack on
+  core 0. CZeroMQClient (see zmqclient.h) is a CTask which connects to a
+  ZeroMQ broker, publishes a JSON status message every 500 ms (see
+  ZMQ_STATUS_INTERVAL_MS in kernel.h), and receives Start (arm) / Stop
+  (disarm) commands and forwards them to CElmoPlatinumCore1Master::
+  SubmitCommand().
+
+The CiA 402 controlword decision each cycle (elmo_core1.cpp,
+CyclicProcess()):
+
+	Fault / Fault reaction active   -> Fault Reset (always, regardless of arm state)
+	Not ready / Switch on disabled  -> Shutdown (always - a prerequisite for arming)
+	Ready to switch on              -> armed: Switch On   | disarmed: Shutdown (no-op here)
+	Switched on                     -> armed: Enable Op.  | disarmed: Shutdown
+	Operation enabled                -> armed: Enable Op.  | disarmed: Shutdown (the actual disarm path)
+	Quick stop active                -> Shutdown (never commanded by this master)
+
+Target velocity is always written as 0.
+
+
+THE ZEROMQ PROTOCOL
+
+Same hand-written minimal ZMTP 3.0 client as sample/50-ethercatzmq (see
+zmtp.h/.cpp, copied unchanged) - NULL security mechanism only, DEALER role
+talking to a ROUTER-based broker (no PUB/SUB support, so it will not
+interoperate out of the box with a plain zmq.PUB/zmq.SUB pair or a stock
+XPUB/XSUB proxy). Two message "topics" are multiplexed over the one
+DEALER<->ROUTER connection, distinguished by the first frame:
+
+	["status",  <JSON>]	sent periodically, device -> broker
+	["command", <JSON>]	received asynchronously, broker -> device,
+				body is {"cmd":"start"} (arm) or {"cmd":"stop"} (disarm)
+
+The hand-written ZMTP greeting has been checked against RFC 23
+(https://rfc.zeromq.org/spec/23/), but was not validated against a packet
+capture of a real libzmq peer. Verify it against your actual broker (e.g.
+with Wireshark's ZMTP dissector) before relying on it in an important setup.
+
+A minimal Python test broker, which exercises this protocol end-to-end,
+including sending Start/Stop from stdin (requires "pip install pyzmq"):
+
+	import sys, threading, zmq, json
+
+	ctx = zmq.Context()
+	sock = ctx.socket(zmq.ROUTER)
+	sock.bind("tcp://*:5555")
+
+	lock = threading.Lock()
+	last_identity = [None]
+
+	def stdin_loop():
+	    for line in sys.stdin:
+	        cmd = line.strip().lower()
+	        if cmd not in ("start", "stop"):
+	            print("type 'start' or 'stop'")
+	            continue
+	        with lock:
+	            identity = last_identity[0]
+	        if identity is None:
+	            print("no client connected yet")
+	            continue
+	        sock.send_multipart(
+	            [identity, b"command", json.dumps({"cmd": cmd}).encode()])
+	        print("sent", cmd)
+
+	threading.Thread(target=stdin_loop, daemon=True).start()
+
+	while True:
+	    identity, msgtype, payload = sock.recv_multipart()
+	    with lock:
+	        last_identity[0] = identity
+	    if msgtype == b"status":
+	        print(json.loads(payload))
+
+
+CONFIGURATION
+
+The used net devices, the cycle time and the ZeroMQ broker address are
+defined in kernel.h:
+
+	ELMO_NET_DEVICE		net device for the Elmo Platinum drive (default 0)
+	ZMQ_NET_DEVICE			net device for the ZeroMQ client (default 1)
+	ELMO_CYCLE_TIME_US		process data cycle time (default 4000 us)
+	ZMQ_BROKER_HOST_DEFAULT	default ZeroMQ broker host
+	ZMQ_BROKER_PORT_DEFAULT	default ZeroMQ broker port (default 5555)
+	ZMQ_STATUS_INTERVAL_MS		interval of the status messages (default 500 ms)
+
+The broker address can be overridden without rebuilding, using these options
+in cmdline.txt on the SD card:
+
+	zmqbroker=192.168.1.10		ZeroMQ broker host name or IP address
+	zmqport=5555			ZeroMQ broker port
+
+Drive-tuning constants are defined in elmo_core1.h, matching where
+sample/49-elmoplatinum keeps them:
+
+	ELMO_MAX_PROFILE_VELOCITY	max Profile Velocity, object 0x607F (default 5000 counts/s)
+	ELMO_PROFILE_ACCEL/DECEL	object 0x6083/0x6084 (default 10000 counts/s^2)
+	SAFE_OP_TO_OPERATIONAL_DELAY_US	delay before requesting OPERATIONAL (default 5000 us)
+
+
+DEBUG OUTPUT
+
+The debug messages (the Circle system log) are written to the serial
+interface. On the Raspberry Pi 5 the dedicated 3-pin UART connector is used,
+served by uart10 (serial device 10 in Circle, "ttyS11"). Other Raspberry Pi
+models use the UART on GPIO14/15. Settings: 115200 baud, 8 data bits, no
+parity, 1 stop bit, defined in kernel.h (SERIAL_DEVICE_NUMBER and
+SERIAL_BAUD_RATE).
+
+The following options can be added to cmdline.txt on the SD card:
+
+	loglevel=4	log level: 0 (panic) to 4 (debug, this is the default)
+	logtarget=tty1	write the log messages to the screen (HDMI) instead
+	logtarget=ttyS11 write them to the UART connector (this is the default)
+
+The output looks like this (boot, no command sent yet - the drive stays
+disarmed, matching sample/49-elmoplatinum's transcript up through "Ready to
+switch on" but not beyond, and without any demo motion):
+
+	00:00:02.14 kernel: Compile time: Aug 19 2026 09:12:33
+	00:00:02.14 kernel: 2 net device(s) available
+	00:00:02.15 elmo: Elmo Platinum master starting on eth0 (cycle time 4000 us)
+	00:00:02.31 elmo: 1 slave(s) found, slave 1 is in PRE_OP, configuring the drive
+	00:00:02.31 elmo: slave[1] "EPD" vendor 0x9A product 0x100002: Elmo Platinum drive
+	00:00:02.33 elmo: Forced Free Run mode (no Distributed Clocks) on sync managers 2 and 3
+	00:00:02.35 elmo: Drive configured: Profile Velocity mode, max velocity 5000 counts/s
+	00:00:02.40 elmo: Slave reached SAFE_OP (6 byte(s) out, 6 byte(s) in, expected WKC 3)
+	00:00:02.40 elmo: Waiting 5000 us before requesting OPERATIONAL
+	00:00:02.60 elmo: Slave is operational
+	00:00:02.60 elmo: Drive state: Switch on disabled (statusword 0x0250, disarmed)
+	00:00:02.61 elmo: Drive state: Ready to switch on (statusword 0x0231, disarmed)
+	00:00:04.01 zmqclient: Connected to broker 192.168.1.10:5555
+	00:00:12.15 kernel: EtherCAT: OPERATIONAL, drive: Ready to switch on, WKC 3 of 3, ..., disarmed
+
+Sending {"cmd":"start"} (type "start" in the test broker above) shows:
+
+	00:01:00.00 zmqclient: Received Start command (arm)
+	00:01:00.00 elmo: Start requested, arming the drive
+	00:01:00.00 elmo: Drive state: Switched on (statusword 0x0233, armed)
+	00:01:00.01 elmo: Drive state: Operation enabled (statusword 0x0237, armed)
+
+...and the status JSON's "drivestate" field becomes "Operation enabled",
+"armed" becomes true, "targetvelocity" stays 0 - no motion is commanded.
+
+Sending {"cmd":"stop"} shows the reverse:
+
+	00:01:30.00 zmqclient: Received Stop command (disarm)
+	00:01:30.00 elmo: Stop requested, disarming the drive
+	00:01:30.00 elmo: Drive state: Ready to switch on (statusword 0x0231, disarmed)
+
+To see the internal debug messages of SOEM too, build the SOEM library with:
+
+	cd addon/soem
+	make clean
+	make EC_DEBUG=1
+
+
+TROUBLESHOOTING
+
+If the bus reaches SAFE_OP but fails to reach OPERATIONAL, the log shows the
+EtherCAT AL status code and its string, e.g.:
+
+	elmo: Slave not operational (state 0x04, AL status 0x002D: DC Sync1 Cycle Time)
+
+AL status 0x2D ("DC Sync1 Cycle Time") means the drive's Sync Manager 3
+(inputs) was configured by its own default ESI/firmware to synchronize to
+Distributed Clocks SYNC1 (CoE object 0x1C33:01 = 0x0003), and no valid Sync1
+cycle time was ever programmed by the master. This is a common default on
+Elmo drives. This sample avoids the problem instead of solving it "properly",
+exactly like sample/49-elmoplatinum: ConfigureDrive() forces both sync
+managers into Free Run mode (0x1C32:01 and 0x1C33:01 = 0x0000) while the
+slave is still in PRE_OP, so the drive never expects Distributed Clocks in
+the first place, and ecx_configdc() is not called at all. This Circle SOEM
+port does not generate real SYNC0/SYNC1 hardware pulses and does not
+discipline the Raspberry Pi's clock to the DC master clock (see
+addon/soem/README, "REQUIREMENTS AND LIMITATIONS"), so genuine DC-synchronous
+drive operation is not meaningfully available here anyway; Free Run matches
+what CyclicProcess() already does - a free-running software poll loop.
+
+If the Free Run override itself fails (logged as a warning, not a fatal
+error, since some firmware may expose 0x1C32/0x1C33 read-only), the drive may
+still require Distributed Clocks; check the AL status again to confirm.
+
+
+NOTES
+
+Core 1 runs the EtherCAT/CiA 402 cyclic loop directly, without the Circle
+scheduler: it uses CTimer::SimpleusDelay()/CTimer::Get()->MsDelay() to pace
+the cycle and the reconfigure retry, instead of CScheduler::usSleep()/
+MsSleep() (which sample/49-elmoplatinum uses, since it runs on core 0). Core
+1 is the exclusive owner of the SOEM context, the on-board net device and
+the process data image, so it needs no locking for those. Only its status
+snapshot (read by the ZeroMQ client) and its command slot (written by the
+ZeroMQ client) are shared across cores, and both are protected with
+CSpinLock. Do not add any other cross-core sharing to
+CElmoPlatinumCore1Master without the same care: CScheduler, CTask, CMutex,
+and the CSocket/CNetSubSystem based networking stack are only safe on core 0
+(see doc/multicore.txt).
+
+Cycle times below one millisecond are not recommended, same as for
+sample/49-elmoplatinum/47-ethercatweb. There is no synchronization of the
+system time of the Raspberry Pi to the distributed clock of the EtherCAT
+network.
+
+If no slaves are found or the Ethernet link is down, the master scans the
+bus again every five seconds; the armed/disarmed intent (m_bRunning) is not
+reset by a rescan, so the drive comes back up in the same arm state it was
+requested to be in before the rescan. If the connection to the broker is
+lost, the ZeroMQ client retries every five seconds.
+
+This sample assumes a single slave (slave 1) on the bus and does not scan
+for or identify multiple drives, matching sample/49-elmoplatinum; unlike
+sample/50-ethercatzmq, it does not port that sample's generic multi-slave
+CheckSlaveStates() recovery logic - a lost connection triggers a full
+rescan/reconfigure from PRE_OP instead of a lighter per-slave nudge, which
+also re-applies ConfigureDrive()'s SDO writes.

@@ -49,6 +49,7 @@ SAMPLES
 48-elmoweb	[5]	Elmo servo drive control with JSD over EtherCAT, with status and control web interface (requires addon/soem and addon/jsd)
 49-elmoplatinum	[5]	Raw SOEM EtherCAT master for a single Elmo Platinum drive, with explicit PRE_OP/SAFE_OP/OPERATIONAL control and CiA 402 enable sequence, debug output over serial only (requires addon/soem)
 50-ethercatzmq	[5]	EtherCAT master (SOEM) on its own CPU core, publishing status and receiving Start/Stop commands via a hand-written ZeroMQ (ZMTP) client on a second Ethernet port (requires addon/soem and --multicore)
+51-elmoplatinumzmq [5]	Raw SOEM Elmo Platinum drive control (CiA 402) on its own CPU core, armed/disarmed remotely via a hand-written ZeroMQ (ZMTP) client on a second Ethernet port (requires addon/soem and --multicore)
 
 Samples marked with [PnP] are enabled for USB plug-and-play.
 Samples marked with [5] are working on the Raspberry Pi 5.
