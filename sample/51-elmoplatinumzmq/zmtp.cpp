@@ -17,6 +17,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include "zmtp.h"
+#include <circle/net/in.h>
 #include <circle/util.h>
 #include <assert.h>
 
