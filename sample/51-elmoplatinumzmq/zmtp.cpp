@@ -39,6 +39,8 @@ CZMTPConnection::CZMTPConnection (CSocket *pSocket)
 	m_nRxBodyLen (0),
 	m_pRxBody (0),
 	m_nRxBodyGot (0),
+	m_nStageHead (0),
+	m_nStageTail (0),
 	m_nPendingFrames (0)
 {
 	assert (m_pSocket != 0);
@@ -192,7 +194,7 @@ int CZMTPConnection::ReceiveMessage (u8 *ppFrame[], size_t pLength[], unsigned n
 		switch (m_RxPhase)
 		{
 		case RxPhaseFlags: {
-			int nResult = m_pSocket->Receive (&m_RxFlags, 1, MSG_DONTWAIT);
+			int nResult = ReadBytes (&m_RxFlags, 1, TRUE);
 			if (nResult == 0)
 			{
 				return 0;
@@ -207,7 +209,7 @@ int CZMTPConnection::ReceiveMessage (u8 *ppFrame[], size_t pLength[], unsigned n
 			} break;
 
 		case RxPhaseLenShort: {
-			int nResult = m_pSocket->Receive (&m_RxLenBuf[0], 1, MSG_DONTWAIT);
+			int nResult = ReadBytes (&m_RxLenBuf[0], 1, TRUE);
 			if (nResult == 0)
 			{
 				return 0;
@@ -226,8 +228,8 @@ int CZMTPConnection::ReceiveMessage (u8 *ppFrame[], size_t pLength[], unsigned n
 			} break;
 
 		case RxPhaseLenLong: {
-			int nResult = m_pSocket->Receive (&m_RxLenBuf[m_nRxLenGot],
-							  8 - m_nRxLenGot, MSG_DONTWAIT);
+			int nResult = ReadBytes (&m_RxLenBuf[m_nRxLenGot],
+						 8 - m_nRxLenGot, TRUE);
 			if (nResult == 0)
 			{
 				return 0;
@@ -258,8 +260,8 @@ int CZMTPConnection::ReceiveMessage (u8 *ppFrame[], size_t pLength[], unsigned n
 		case RxPhaseBody: {
 			if (m_nRxBodyGot < m_nRxBodyLen)
 			{
-				int nResult = m_pSocket->Receive (m_pRxBody + m_nRxBodyGot,
-					(unsigned) (m_nRxBodyLen - m_nRxBodyGot), MSG_DONTWAIT);
+				int nResult = ReadBytes (m_pRxBody + m_nRxBodyGot,
+					(size_t) (m_nRxBodyLen - m_nRxBodyGot), TRUE);
 				if (nResult == 0)
 				{
 					return 0;
@@ -341,6 +343,51 @@ void CZMTPConnection::StartBody (void)
 	m_RxPhase = RxPhaseBody;
 }
 
+int CZMTPConnection::FillStage (boolean bDontWait)
+{
+	assert (m_pSocket != 0);
+	assert (m_nStageHead == m_nStageTail);	// only refill once drained
+
+	m_nStageHead = 0;
+	m_nStageTail = 0;
+
+	// The whole point of this method: the socket is read with a buffer big
+	// enough for an entire TCP segment, so CSocket::Receive() never has to
+	// throw a tail away.
+	int nResult = m_pSocket->Receive (m_RxStage, sizeof m_RxStage,
+					  bDontWait ? MSG_DONTWAIT : 0);
+	if (nResult <= 0)
+	{
+		return nResult;
+	}
+
+	m_nStageTail = (unsigned) nResult;
+
+	return nResult;
+}
+
+int CZMTPConnection::ReadBytes (void *pBuffer, size_t nLength, boolean bDontWait)
+{
+	assert (pBuffer != 0);
+
+	if (m_nStageHead == m_nStageTail)
+	{
+		int nResult = FillStage (bDontWait);
+		if (nResult <= 0)
+		{
+			return nResult;
+		}
+	}
+
+	size_t nAvailable = m_nStageTail - m_nStageHead;
+	size_t nCopy = nLength < nAvailable ? nLength : nAvailable;
+
+	memcpy (pBuffer, &m_RxStage[m_nStageHead], nCopy);
+	m_nStageHead += (unsigned) nCopy;
+
+	return (int) nCopy;
+}
+
 boolean CZMTPConnection::SendAll (const void *pBuffer, size_t nLength)
 {
 	const u8 *p = (const u8 *) pBuffer;
@@ -366,7 +413,7 @@ boolean CZMTPConnection::ReceiveExact (void *pBuffer, size_t nLength)
 
 	while (nLength > 0)
 	{
-		int nResult = m_pSocket->Receive (p, (unsigned) nLength, 0);
+		int nResult = ReadBytes (p, nLength, FALSE);
 		if (nResult <= 0)
 		{
 			return FALSE;		// error, timeout or peer closed

@@ -24,6 +24,13 @@
 
 #define ZMTP_MAX_FRAMES		4	// max frames handled per multipart message
 
+// Size of the receive staging buffer. CSocket::Receive() returns one whole
+// TCP segment and discards whatever does not fit into the caller's buffer
+// (see lib/net/socket.cpp), so the socket is always read with a buffer big
+// enough for a full segment and the bytes are handed out from there. Must
+// be at least the MSS of the link (1460 bytes for a 1500 byte MTU).
+#define ZMTP_RX_STAGE_SIZE	2048
+
 /// \brief Minimal ZMTP 3.0 (NULL security mechanism) client, DEALER socket type
 ///
 /// This implements just enough of the ZMTP 3.0 wire protocol (see RFC 23,
@@ -76,6 +83,13 @@ private:
 	boolean SendAll (const void *pBuffer, size_t nLength);
 	boolean ReceiveExact (void *pBuffer, size_t nLength);	// blocking, with timeout
 
+	// Drop-in replacement for m_pSocket->Receive(), which never loses the
+	// tail of a TCP segment. Same return convention: number of bytes read,
+	// 0 if nothing is available (bDontWait) or the timeout expired, < 0 on
+	// error.
+	int ReadBytes (void *pBuffer, size_t nLength, boolean bDontWait);
+	int FillStage (boolean bDontWait);	// refill m_RxStage from the socket
+
 	boolean SendFrame (const void *pBuffer, size_t nLength, boolean bMore, boolean bCommand);
 	boolean ReceiveFrameBlocking (u8 *pBuffer, size_t nBufferSize, size_t *pLength,
 				      boolean *pbCommand);	// used by Handshake() only
@@ -84,6 +98,11 @@ private:
 
 private:
 	CSocket *m_pSocket;
+
+	// staging buffer for all socket reads, see ZMTP_RX_STAGE_SIZE above
+	u8	 m_RxStage[ZMTP_RX_STAGE_SIZE];
+	unsigned m_nStageHead;
+	unsigned m_nStageTail;
 
 	enum TRxPhase { RxPhaseFlags, RxPhaseLenShort, RxPhaseLenLong, RxPhaseBody };
 
