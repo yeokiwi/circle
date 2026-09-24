@@ -1,0 +1,91 @@
+README
+
+This library provides a PID controller for closed-loop control applications
+(e.g. temperature, motor speed or position control) and a relay feedback
+auto-tuner, which determines suitable controller gains automatically.
+
+The library does not use the math library or dynamic memory allocation and can
+be used on all Raspberry Pi models. Build it with:
+
+	make clean
+	make
+
+This generates the library libpid.a. Add it to the LIBS of your application:
+
+	LIBS = $(CIRCLEHOME)/addon/pid/libpid.a ...
+
+and include the headers with:
+
+	#include <pid/pidcontroller.h>
+	#include <pid/pidautotuner.h>
+
+CPIDController
+--------------
+
+Discrete PID controller in parallel form:
+
+	u = Kp * (b*r - y) + Ki * integral (r - y) dt + Kd * d/dt (c*r - y) + FF
+
+r: setpoint, y: measurement, b, c: setpoint weights, FF: feed-forward.
+Ki = Kp/Ti (1/s), Kd = Kp*Td (s).
+
+Features:
+
+* Fixed sample time (Update (r, y)) or variable sample time (Update (r, y, dt))
+* Output limits with anti-windup (conditional integration or back-calculation)
+* Derivative on measurement by default (no "derivative kick" on setpoint steps)
+* First-order low-pass filter for the derivative term
+* Setpoint weighting for the proportional and derivative term
+* Output rate limit (slew rate)
+* Integration deadband
+* Direct acting (e.g. heater) or reverse acting (e.g. cooler)
+* Manual mode with bumpless transfer to automatic mode
+* Bumpless start from an existing actuator output (Initialize ())
+* Gain changes during operation without output bump
+* Access to the P, I and D terms for diagnostics
+
+Typical usage (100 Hz loop):
+
+	CPIDController PID (2.0f, 0.5f, 0.1f, 0.01f);	// Kp, Ki, Kd, sample time
+	PID.SetOutputLimits (0.0f, 100.0f);
+	PID.SetDerivativeFilter (0.05f);
+
+	// every 10 ms:
+	float fOutput = PID.Update (fSetpoint, ReadSensor ());
+	WriteActuator (fOutput);
+
+The controller is not thread-safe. Call all methods of one instance from the
+same execution context (task, core or interrupt handler).
+
+CPIDAutoTuner
+-------------
+
+Relay feedback auto-tuner (Astrom-Hagglund). While running it replaces the
+controller and toggles the output between Base-Step and Base+Step around the
+setpoint. The process oscillates with its ultimate period Tu. From the period
+and the amplitude of this oscillation the ultimate gain Ku is calculated and
+the PID gains are derived using one of these tuning rules:
+
+	Ziegler-Nichols PI / PID
+	Tyreus-Luyben PI / PID	(less overshoot, more robust)
+	Some overshoot PID
+	No overshoot PID
+
+The first oscillation cycle is ignored, the following cycles are averaged. The
+hysteresis should be larger than the noise of the measurement. The process must
+tolerate the output swing during the tuning.
+
+	CPIDAutoTuner Tuner;
+	Tuner.Start (50.0f, 40.0f, 30.0f, 0.2f);	// setpoint, base, step, hysteresis
+
+	while (Tuner.IsRunning ())			// every sample time
+	{
+		WriteActuator (Tuner.Update (ReadSensor (), 0.01f));
+	}
+
+	if (Tuner.GetState () == CPIDAutoTuner::StateFinished)
+	{
+		Tuner.ApplyTunings (CPIDAutoTuner::RuleTyreusLuybenPID, &PID);
+	}
+
+See sample/52-pidcontrol for a complete example.

@@ -1,0 +1,38 @@
+README
+
+This sample demonstrates the PID control library in addon/pid. It does not need
+any external hardware, because it controls a simulated process: a heated block
+(first order plus dead time model) with a thermal time constant of 5 seconds, a
+dead time of 0.5 seconds and some measurement noise. The control loop runs at
+100 Hz in real time.
+
+The sample runs through these steps:
+
+1. Relay auto-tuning at 50 C, which determines the ultimate gain Ku and period
+   Tu of the process. The PID gains are calculated for all supported tuning
+   rules, the Tyreus-Luyben PID gains are used.
+2. Holding the setpoint of 50 C.
+3. Setpoint step to 70 C (the heater power saturates, anti-windup is active).
+4. Disturbance: an additional heat loss (e.g. an open lid) is compensated.
+5. Manual mode: the heater power is fixed to 30%, the temperature drops.
+6. Bumpless transfer back to automatic mode, the setpoint is recovered.
+7. Cool down to 40 C.
+
+Every 0.5 seconds the setpoint (SP), the measured process value (PV), the
+controller output (OUT, heater power in %) and the P, I and D terms are logged.
+After each step the integral of the absolute error (IAE) and the maximum
+overshoot are displayed. The whole demo takes about 2.5 minutes.
+
+The addon/pid library has to be built first:
+
+	cd addon/pid
+	make
+
+Configuration options (loop period, process model, tuning parameters and
+tuning rule) can be modified at the top of kernel.cpp.
+
+To control a real process, replace the class CHeaterPlant with reading your
+sensor (e.g. an I2C temperature sensor) and writing your actuator (e.g. a PWM
+output driving the heater). If the screen output delays the control loop too
+much, log to the serial interface (logdev=ttyS1 in cmdline.txt) or reduce the
+log interval.
