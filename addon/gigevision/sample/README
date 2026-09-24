@@ -1,0 +1,25 @@
+README
+
+This sample demonstrates the GigE Vision library. It searches for GigE Vision
+cameras on the local network, opens the first camera found, loads its GenICam
+description and displays its features. Then it sets the camera to Mono8 pixel
+format (with a maximum image size of 640x480 pixels), starts the acquisition
+and shows the received images in the upper right quarter of the screen. The
+frame rate and packet statistics are logged every 5 seconds.
+
+Connect the camera to the Ethernet port of the Raspberry Pi (directly or via a
+switch). The network is configured with DHCP by default. You can change this
+in kernel.cpp. If the camera is not on the same subnet (e.g. it has a
+link-local address, because there is no DHCP server on a direct connection), a
+temporary IP address with the host part 222 in the subnet of the Raspberry Pi
+is assigned to the camera using the FORCEIP command. With a direct connection
+without DHCP server, a static IP address must be configured in kernel.cpp.
+
+The log messages are written to the screen and overlap with the image. Add the
+option "logdev=ttyS1" to the file cmdline.txt on the SD card to send the log
+to the serial interface instead.
+
+Build the Circle libraries and the library in addon/gigevision first. Then
+enter "make" in this directory.
+
+Power-over-Ethernet cameras need a PoE injector or switch.

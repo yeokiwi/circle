@@ -1,0 +1,130 @@
+GigE Vision
+===========
+
+This library allows a Circle application to control GigE Vision cameras and to
+receive their images over Ethernet. The Raspberry Pi acts as the application
+(host) side of the GigE Vision standard. The library is written from scratch
+and does not depend on third-party code.
+
+FEATURES
+
+* GVCP (GigE Vision Control Protocol, UDP port 3956)
+  - Device discovery (broadcast DISCOVERY_CMD)
+  - FORCEIP_CMD to assign a temporary IP address to a camera, which is not
+    reachable from our subnet (e.g. uses a link-local 169.254.x.x address)
+  - READREG/WRITEREG, READMEM/WRITEMEM with transparent splitting, alignment,
+    retries (same request ID) and PENDING_ACK handling
+  - Control channel privilege (control or exclusive access) and a heartbeat
+    task, which keeps the privilege alive
+  - PACKETRESEND_CMD
+* GVSP (GigE Vision Streaming Protocol)
+  - Reassembly of blocks (frames) from leader, payload and trailer packets
+  - Image leader information (pixel format, size, offset, padding, timestamp)
+  - Detection of lost packets, optional resend requests (grouped in ranges)
+  - Handling of lost trailers, late/stale packets, block ID wrap-around and
+    devices, which restart their block IDs
+  - Standard and extended (64-bit) block IDs (resend with standard IDs only)
+* GenICam (subset of GenApi)
+  - Download of the device description file from the device ("Local:" URL),
+    plain XML or zipped (own DEFLATE decompressor with CRC check)
+  - Built-in XML parser
+  - Feature access by name: Integer, IntReg, MaskedIntReg, StructReg/
+    StructEntry, Float, FloatReg, Boolean, Enumeration/EnumEntry, Command,
+    String, StringReg, IntSwissKnife, SwissKnife, IntConverter, Converter,
+    Category, pIsImplemented/pIsAvailable
+  - Formula evaluator for SwissKnife/Converter nodes (all operators, functions
+    and constants of the GenICam standard, pVariable/Constant/Expression)
+  - Address calculation with multiple Address/pAddress, pIndex (Offset/pOffset)
+    and embedded IntSwissKnife, byte order and bit numbering of BigEndian and
+    LittleEndian registers, signed values
+
+CLASSES
+
+CGigECamera		High-level camera class (open with control privilege and
+			heartbeat, load description, configure stream channel,
+			start/stop acquisition). Start here.
+CGVCPClient		GVCP control channel (register/memory access), static
+			Discover() and ForceIP() methods
+CGVSPReceiver		GVSP stream receiver, returns complete frames
+CGenICamNodeMap		GenICam feature access (GetInteger(), SetEnum(),
+			ExecuteCommand() etc.)
+CGenICamFormula		Formula evaluator
+CXMLDocument		Minimal XML parser
+CUnzip			ZIP extraction and DEFLATE decompressor
+gvcp.h			Protocol definitions (commands, bootstrap registers, packet
+			layouts, pixel formats)
+
+USAGE
+
+	#include <gigevision/gigecamera.h>
+
+	TGigEDeviceInfo Devices[4];
+	int nDevices = CGVCPClient::Discover (&m_Net, Devices, 4);
+
+	CGigECamera Camera (&m_Net);
+	Camera.Open (Devices[0].IPAddress);
+	Camera.LoadDescription ();
+
+	CGenICamNodeMap *pNodeMap = Camera.GetNodeMap ();
+	pNodeMap->SetEnum ("PixelFormat", "Mono8");
+	pNodeMap->SetInteger ("Width", 640);
+	pNodeMap->SetFloat ("ExposureTime", 5000.0);
+
+	size_t nSize = Camera.GetPayloadSize ();
+	u8 *pBuffer = new u8[nSize];
+
+	Camera.OpenStream ();
+	Camera.StartAcquisition ();
+
+	TGVSPFrameInfo Info;
+	if (   Camera.GetStream ()->ReceiveFrame (&Info, pBuffer, nSize, 1000)
+	    && Info.Complete)
+	{
+		// Info.SizeX x Info.SizeY pixels of Info.PixelFormat in pBuffer
+	}
+
+	Camera.StopAcquisition ();
+	Camera.Close ();
+
+The library needs the network subsystem and the scheduler (the heartbeat runs
+as a separate task). Calls into the library must be made from tasks on core 0,
+like all calls into the Circle network stack.
+
+BUILDING
+
+Build the Circle libraries first (./makeall in the Circle root directory), then:
+
+	cd addon/gigevision
+	make
+
+Link libgigevision.a into your application before the Circle libraries, see
+sample/Makefile.
+
+NOTES AND LIMITATIONS
+
+* Circle does not support jumbo frames. The packet size is limited to 1500
+  bytes, which is set by CGigECamera::OpenStream().
+* The throughput of the Circle network stack is limited. With cameras, which
+  can deliver more data than the Raspberry Pi can receive, reduce the frame
+  rate, the image size (ROI, binning) or increase the inter-packet delay with
+  CGigECamera::SetPacketDelay() to avoid lost packets.
+* A camera must be on the same IP subnet as the Raspberry Pi, otherwise its
+  packets are sent to the default gateway. Use CGVCPClient::ForceIP() in this
+  case (the sample program does this automatically).
+* Only "Local:" description file URLs are supported. With "File:" or "http:"
+  URLs load the XML otherwise and pass it to CGigECamera::LoadDescription
+  (pXML, nLength).
+* Not supported: message channel/events, action commands, chunk data (nodes on
+  a chunk port fail to read), multi-part/H.264/JPEG payload reassembly
+  (payload packets of these types are ignored), GenICam value caching,
+  selectors beyond plain register indexing (pIndex), pIsLocked checks.
+* Float values are formatted with CString::Format ("%.3f").
+
+TESTING
+
+The library was tested on a Linux host with a port of the Circle socket API
+against the "arv-fake-gv-camera" simulator of the Aravis project (discovery,
+control, description download, feature access, streaming with heartbeat and
+block ID wrap-around, packet loss), and with unit tests of the XML parser,
+the ZIP/DEFLATE decompressor, the formula evaluator, the GenICam node map and
+the GVSP receiver including resend handling.
