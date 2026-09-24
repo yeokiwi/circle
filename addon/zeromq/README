@@ -1,0 +1,155 @@
+README
+
+This library implements the ZeroMQ publish-subscribe pattern (PUB and SUB
+sockets) for Circle. It speaks the ZeroMQ wire protocol ZMTP 3.0 over TCP (see
+https://rfc.zeromq.org/spec/23/), so it can talk to libzmq and its language
+bindings (e.g. pyzmq, cppzmq, JeroMQ, NetMQ) and to other Circle systems
+using this library.
+
+libzmq itself cannot be used with Circle, because it depends on POSIX
+threads and BSD sockets, so the protocol has been implemented from scratch
+on top of the Circle TCP/IP stack (CSocket).
+
+
+FEATURES
+
+* CZMQPublisher (PUB socket): sends messages to all subscribers, which
+  subscribed a matching topic. Peers can be ZeroMQ SUB or XSUB sockets
+  (e.g. the XSUB side of a zmq_proxy()).
+
+* CZMQSubscriber (SUB socket): subscribes topics and receives messages
+  from publishers. Peers can be ZeroMQ PUB or XPUB sockets (e.g. the XPUB
+  side of a zmq_proxy()).
+
+* Both sockets can Bind() to a TCP port (the peers connect) and/or
+  Connect() to one or more remote endpoints, in any combination, like with
+  libzmq. Outgoing connections are established in the background and
+  re-established automatically, when they get lost.
+
+* Multipart messages with up to ZMQ_MAX_FRAMES (16) frames and frames with
+  up to ZMQ_MAX_FRAME_SIZE (256 KByte) each.
+
+* Topics are byte prefixes of the first frame of a message, like with
+  libzmq. The publisher filters the messages before they are sent. The
+  subscriber filters again (needed for XPUB peers). Subscriptions are
+  reference counted: a topic, which has been subscribed twice, has to be
+  unsubscribed twice.
+
+* Only the NULL security mechanism is supported (no PLAIN or CURVE
+  authentication/encryption). Use it in a trusted network only.
+
+* ZMTP 3.1 PING commands (ZMQ_HEARTBEAT_* options of the peer) are answered
+  and ZMTP 3.1 SUBSCRIBE/CANCEL commands are understood, but the library
+  announces itself as ZMTP 3.0, so libzmq peers use the 3.0 subscription
+  format.
+
+Not supported: other socket types (REQ/REP, PUSH/PULL, DEALER/ROUTER),
+other transports (ipc://, inproc://, udp://, pgm://), ZMTP 1.0/2.0 peers
+(libzmq older than 4.0) and the high-water mark options.
+
+
+USAGE
+
+	#include <zeromq/zmqpublisher.h>
+	#include <zeromq/zmqsubscriber.h>
+
+	// publisher, subscribers connect to "tcp://<ip-of-raspberry-pi>:5556"
+	CZMQPublisher *pPublisher = new CZMQPublisher (&m_Net);
+	pPublisher->Bind (5556);
+
+	pPublisher->Publish ("sensor.temp", "21.5");		// [topic, string]
+	pPublisher->Publish ("sensor.raw", pData, nLength);	// [topic, binary]
+
+	CZMQMessage Message;					// any multipart message
+	Message.AddFrame ("sensor.all");
+	Message.AddFrame (pData, nLength);
+	pPublisher->Publish (Message);
+
+	// subscriber, connects to a publisher on "tcp://192.168.0.10:5557"
+	static void MessageHandler (const CZMQMessage &rMessage, void *pParam)
+	{
+		// rMessage.GetFrameCount (), GetFrame (i), GetFrameSize (i), ...
+	}
+
+	CZMQSubscriber *pSubscriber = new CZMQSubscriber (&m_Net);
+	pSubscriber->RegisterMessageHandler (MessageHandler, this);
+	pSubscriber->Subscribe ("pc.");			// "" subscribes all messages
+	pSubscriber->Connect ("192.168.0.10", 5557);
+
+Instead of registering a message handler, you can derive a class from
+CZMQSubscriber and override its method OnMessage().
+
+The sockets must be created with new (they must not be deleted) after the
+network subsystem has been initialized. A publisher drops messages, while
+no subscriber is connected, exactly like libzmq, so a subscriber misses the
+first messages after it has connected ("slow joiner").
+
+To build the library, do (after building the Circle libraries):
+
+	cd addon/zeromq
+	make
+
+Link your application with addon/zeromq/libzeromq.a and the network
+libraries (see sample/Makefile).
+
+
+IMPLEMENTATION
+
+Each ZeroMQ socket is a CTask (the "I/O task"), which polls all connections
+to its peers (non-blocking) about every millisecond, drives the ZMTP
+handshake, answers PING commands, processes subscriptions and calls the
+message handler of the subscriber. Each Bind() and Connect() creates an
+additional helper task, which accepts incoming connections or connects to
+the remote endpoint in the background, because these operations block in
+the Circle network stack.
+
+Publish() sends directly from the calling task. A message is encoded into
+one buffer and sent with one CSocket::Send() call. A mutex serializes all
+access to the connections, so Publish(), Subscribe() and Unsubscribe() can
+be called from any task. The message handler is called with this mutex
+held, so it may call Subscribe()/Unsubscribe(), but it should return
+quickly.
+
+The Circle TCP stack blocks the sender only, if more than 64 KByte are
+queued for a connection already (i.e. a subscriber is too slow or stalled).
+If such a subscriber does not accept data within the send timeout (default
+1 second, see SetSendTimeout()), it is disconnected, instead of blocking the
+publisher forever. libzmq would drop the messages for this subscriber
+instead (high-water mark).
+
+All ZeroMQ objects must be used on core 0 only, like the rest of the Circle
+network stack (see doc/multicore.txt). On a multi-core system, you can hand
+over data from other cores to a task on core 0 using a spin-lock protected
+buffer (see sample/50-ethercatzmq for an example of this approach).
+
+The limits are defined in zmqsocket.h (ZMQ_MAX_PEERS: 8 connections per
+socket, ZMQ_MAX_ENDPOINTS: 4 Bind()/Connect() calls per socket), in
+zmqmessage.h (ZMQ_MAX_FRAMES) and in zmtpconnection.h (ZMQ_MAX_FRAME_SIZE). A
+received message with more than ZMQ_MAX_FRAMES frames is dropped, a peer,
+which sends a frame larger than ZMQ_MAX_FRAME_SIZE, is disconnected.
+
+
+SAMPLE
+
+The sample in the subdirectory sample/ publishes the topics "circle.uptime"
+(a two-part message) and "circle.counter" (a three-part message) every
+second on port 5556 and subscribes the topic "pc." from a publisher on port
+5557 of another computer. Received messages are written to the log.
+
+Build it with:
+
+	cd addon/zeromq/sample
+	make
+
+The computer running the remote publisher is set with this option in the
+file cmdline.txt on the SD card (default 192.168.0.10):
+
+	zmqpub=192.168.0.10 zmqport=5557
+
+On the computer run these Python scripts (requires "pip install pyzmq"):
+
+	python3 sample/subscriber.py <ip-of-raspberry-pi>	# shows the published messages
+	python3 sample/publisher.py				# sends "pc.hello" to Circle
+
+The sample uses DHCP by default. See the beginning of kernel.cpp to use a
+static IP address.
