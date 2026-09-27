@@ -27,7 +27,7 @@ USAGE
 	SoftReset.EnableGPIO (17, TRUE, 2000);		// GPIO17 low for 2 seconds
 	SoftReset.EnableNetwork (&m_Net, 5050, "secret");
 	SoftReset.EnableSerialMagic (&m_Serial, "circle-reboot");
-	SoftReset.EnableSerialConsole (&m_Serial, "secret");
+	SoftReset.EnableSerialConsole (&m_Serial, "secret", TRUE, &m_Screen);
 
 	while (1)
 	{
@@ -69,7 +69,9 @@ The string can also be sent with tools/reboottool.py.
 EnableSerialConsole() accepts line based commands, which are typed in a terminal
 program (e.g. minicom or PuTTY) and terminated with Enter (CR or LF). The same
 commands as for the network are supported (see below), the characters are
-echoed and backspace can be used. This mode works with any character device
+echoed and backspace can be used. Optionally the typed characters and the
+replies can be displayed on another device too (e.g. on the screen, where the
+input is marked with "serial> "). This mode works with any character device
 (also with the polling serial driver), but it consumes all received data in
 Update(), so the application must not read from this device itself.
 

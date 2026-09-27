@@ -128,7 +128,8 @@ TShutdownMode CKernel::Run (void)
 	m_SoftReset.EnableGPIO (RESET_GPIO_PIN, TRUE, RESET_HOLD_MS);
 	m_SoftReset.EnableNetwork (&m_Net, RESET_UDP_PORT, RESET_PASSWORD);
 	m_SoftReset.EnableSerialMagic (&m_Serial, RESET_SERIAL_MAGIC);
-	m_SoftReset.EnableSerialConsole (&m_Serial, RESET_SERIAL_PASSWORD);
+	m_SoftReset.EnableSerialConsole (&m_Serial, RESET_SERIAL_PASSWORD,
+					 TRUE, &m_Screen);	// echo typed characters on screen
 
 	LOGNOTE ("The system can be rebooted by:");
 	LOGNOTE ("- pressing Ctrl+Alt+Del on an USB keyboard");

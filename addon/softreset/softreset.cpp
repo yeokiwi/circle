@@ -60,6 +60,8 @@ CSoftReset::CSoftReset (void)
 	m_pSerialMagic (0),
 	m_pSerialConsole (0),
 	m_bSerialEcho (TRUE),
+	m_pEchoDevice (0),
+	m_chSerialLast ('\0'),
 	m_nSerialLineLength (0),
 	m_bSerialOverflow (FALSE)
 {
@@ -94,6 +96,7 @@ CSoftReset::~CSoftReset (void)
 	// the serial magic handler cannot be unregistered, it checks s_pThis
 	m_pSerialMagic = 0;
 	m_pSerialConsole = 0;
+	m_pEchoDevice = 0;
 
 	s_pThis = 0;
 }
@@ -209,7 +212,7 @@ boolean CSoftReset::EnableSerialMagic (CSerialDevice *pSerial, const char *pMagi
 }
 
 boolean CSoftReset::EnableSerialConsole (CDevice *pDevice, const char *pPassword,
-					 boolean bEcho)
+					 boolean bEcho, CDevice *pEchoDevice)
 {
 	if (m_pSerialConsole != 0)
 	{
@@ -225,6 +228,8 @@ boolean CSoftReset::EnableSerialConsole (CDevice *pDevice, const char *pPassword
 
 	m_SerialPassword = pPassword != 0 ? pPassword : "";
 	m_bSerialEcho = bEcho;
+	m_pEchoDevice = pEchoDevice;
+	m_chSerialLast = '\0';
 	m_nSerialLineLength = 0;
 	m_bSerialOverflow = FALSE;
 
@@ -578,21 +583,38 @@ void CSoftReset::UpdateSerialConsole (void)
 		for (int i = 0; i < nResult; i++)
 		{
 			char chChar = Buffer[i];
+			char chLast = m_chSerialLast;
+			m_chSerialLast = chChar;
 
 			switch (chChar)
 			{
-			case '\r':
 			case '\n':
-				if (m_bSerialEcho)
+				if (chLast == '\r')
 				{
-					SerialWrite ("\r\n");
+					break;		// CR LF is one line end
 				}
+				// fall through
+
+			case '\r':
+				if (   m_nSerialLineLength == 0
+				    && !m_bSerialOverflow)
+				{
+					// empty line, echo on the serial device only
+					if (m_bSerialEcho)
+					{
+						m_pSerialConsole->Write ("\r\n", 2);
+					}
+
+					break;
+				}
+
+				ConsoleEcho ("\r\n", m_bSerialEcho);
 
 				if (m_bSerialOverflow)
 				{
-					SerialWrite ("ERROR Command too long\r\n");
+					ConsoleEcho ("ERROR Command too long\r\n", TRUE);
 				}
-				else if (m_nSerialLineLength > 0)
+				else
 				{
 					m_SerialLine[m_nSerialLineLength] = '\0';
 
@@ -603,7 +625,7 @@ void CSoftReset::UpdateSerialConsole (void)
 					// terminal needs CR LF
 					CString Reply (pReply);
 					Reply.Replace ("\n", "\r\n");
-					SerialWrite (Reply);
+					ConsoleEcho (Reply, TRUE);
 				}
 
 				m_nSerialLineLength = 0;
@@ -616,10 +638,7 @@ void CSoftReset::UpdateSerialConsole (void)
 				{
 					m_nSerialLineLength--;
 
-					if (m_bSerialEcho)
-					{
-						SerialWrite ("\b \b");
-					}
+					ConsoleEcho ("\b \b", m_bSerialEcho);
 				}
 				break;
 
@@ -637,11 +656,18 @@ void CSoftReset::UpdateSerialConsole (void)
 					break;
 				}
 
+				if (   m_nSerialLineLength == 0
+				    && m_pEchoDevice != 0)
+				{
+					// mark the input on the echo device
+					m_pEchoDevice->Write ("serial> ", 8);
+				}
+
 				m_SerialLine[m_nSerialLineLength++] = chChar;
 
-				if (m_bSerialEcho)
 				{
-					m_pSerialConsole->Write (&chChar, 1);
+					char String[] = {chChar, '\0'};
+					ConsoleEcho (String, m_bSerialEcho);
 				}
 				break;
 			}
@@ -649,12 +675,22 @@ void CSoftReset::UpdateSerialConsole (void)
 	}
 }
 
-void CSoftReset::SerialWrite (const char *pString)
+void CSoftReset::ConsoleEcho (const char *pString, boolean bToSerial)
 {
 	assert (m_pSerialConsole != 0);
 	assert (pString != 0);
 
-	m_pSerialConsole->Write (pString, strlen (pString));
+	size_t nLength = strlen (pString);
+
+	if (bToSerial)
+	{
+		m_pSerialConsole->Write (pString, nLength);
+	}
+
+	if (m_pEchoDevice != 0)
+	{
+		m_pEchoDevice->Write (pString, nLength);
+	}
 }
 
 void CSoftReset::SerialMagicHandler (void)

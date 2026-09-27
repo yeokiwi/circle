@@ -126,6 +126,8 @@ public:
 	/// \param pDevice Pointer to the serial device (or any other character device)
 	/// \param pPassword Password, which must follow the command (0 for none)
 	/// \param bEcho Echo the received characters (for use with a terminal program)
+	/// \param pEchoDevice Additional device (e.g. the screen), on which the typed\n
+	///	   characters and the replies are displayed (0 for none)
 	/// \return Operation successful?
 	/// \note Commands are terminated with CR or LF, backspace is supported:\n
 	///	  "REBOOT [password]" - reboot the system (answer "OK")\n
@@ -133,7 +135,7 @@ public:
 	/// \note The received data is consumed by Update(). Do not read from this\n
 	///	  device in the application.
 	boolean EnableSerialConsole (CDevice *pDevice, const char *pPassword = 0,
-				     boolean bEcho = TRUE);
+				     boolean bEcho = TRUE, CDevice *pEchoDevice = 0);
 
 	/// \param pHandler Handler to be called before the system reboots
 	/// \param pParam User parameter handed over to the handler
@@ -173,7 +175,7 @@ private:
 	const char *HandleCommand (char *pCommand, const char *pPassword,
 				   TSource Source, const char *pFrom);
 	void SendReply (const char *pReply, const CIPAddress &rSender, u16 usSenderPort);
-	void SerialWrite (const char *pString);
+	void ConsoleEcho (const char *pString, boolean bToSerial);
 
 	void PerformReset (void) NORETURN;
 
@@ -218,6 +220,8 @@ private:
 	CDevice *m_pSerialConsole;
 	CString m_SerialPassword;
 	boolean m_bSerialEcho;
+	CDevice *m_pEchoDevice;
+	char m_chSerialLast;
 	char m_SerialLine[SOFTRESET_MAX_COMMAND+1];
 	unsigned m_nSerialLineLength;
 	boolean m_bSerialOverflow;

@@ -35,7 +35,9 @@ Raspberry Pi can be rebooted from four different sources:
    too, add "logdev=ttyS11" to cmdline.txt (Raspberry Pi 5).
 
    a) Type "REBOOT circle" and Enter in a terminal program (e.g. minicom,
-      PuTTY). "PING" is answered with "PONG".
+      PuTTY). "PING" is answered with "PONG". The typed characters and the
+      replies are echoed to the terminal and are displayed on the screen too
+      (marked with "serial> ").
 
    b) Send the magic string "circle-reboot", e.g. with:
 
