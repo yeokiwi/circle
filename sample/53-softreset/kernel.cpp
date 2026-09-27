@@ -27,7 +27,14 @@
 #define RESET_UDP_PORT		CSoftReset::DefaultPort
 #define RESET_PASSWORD		"circle"	// set to 0 to disable the password
 
-// Reset by serial interface (115200 baud, 8N1):
+// Reset by serial interface (115200 baud, 8N1) on UART10, which is the dedicated
+// 3-pin JST debug UART connector of the Raspberry Pi 5 (device name "ttyS11").
+// UART10 is not available on earlier models, which use UART0 (GPIO14/15) instead.
+#if RASPPI >= 5
+	#define RESET_SERIAL_DEVICE	10
+#else
+	#define RESET_SERIAL_DEVICE	0
+#endif
 // - magic string, set REBOOTMAGIC = circle-reboot in Config.mk for "make flash"
 // - console command "REBOOT <password>" typed in a terminal program
 #define RESET_SERIAL_MAGIC	CSoftReset::DefaultSerialMagic
@@ -47,7 +54,7 @@ LOGMODULE ("kernel");
 
 CKernel::CKernel (void)
 :	m_Screen (m_Options.GetWidth (), m_Options.GetHeight ()),
-	m_Serial (&m_Interrupt),			// interrupt driver (needed for magic)
+	m_Serial (&m_Interrupt, FALSE, RESET_SERIAL_DEVICE),	// interrupt driver (needed for magic)
 	m_Timer (&m_Interrupt),
 	m_Logger (m_Options.GetLogLevel (), &m_Timer),
 	m_USBHCI (&m_Interrupt, &m_Timer, TRUE)		// TRUE: enable plug-and-play
@@ -130,11 +137,12 @@ TShutdownMode CKernel::Run (void)
 	LOGNOTE ("- sending \"REBOOT%s%s\" to UDP port %u (e.g. with softreset.py)",
 		 RESET_PASSWORD != 0 ? " " : "", RESET_PASSWORD != 0 ? RESET_PASSWORD : "",
 		 (unsigned) RESET_UDP_PORT);
-	LOGNOTE ("- sending \"%s\" over the serial interface (REBOOTMAGIC)",
-		 RESET_SERIAL_MAGIC);
-	LOGNOTE ("- typing \"REBOOT%s%s\" in a terminal on the serial interface",
+	LOGNOTE ("- sending \"%s\" over UART%u (REBOOTMAGIC)",
+		 RESET_SERIAL_MAGIC, RESET_SERIAL_DEVICE);
+	LOGNOTE ("- typing \"REBOOT%s%s\" in a terminal on UART%u",
 		 RESET_SERIAL_PASSWORD != 0 ? " " : "",
-		 RESET_SERIAL_PASSWORD != 0 ? RESET_SERIAL_PASSWORD : "");
+		 RESET_SERIAL_PASSWORD != 0 ? RESET_SERIAL_PASSWORD : "",
+		 RESET_SERIAL_DEVICE);
 
 	unsigned nStartTicks = m_Timer.GetClockTicks ();
 	unsigned nLastSeconds = 0;

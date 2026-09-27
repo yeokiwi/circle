@@ -26,8 +26,13 @@ Raspberry Pi can be rebooted from four different sources:
 
 	echo "REBOOT circle" | nc -u -w1 192.168.0.123 5050
 
-4. Serial interface (115200 baud, 8N1, GPIO14/15 = header pins 8/10, e.g. with
-   an USB-to-serial adapter):
+4. Serial interface UART10 (115200 baud, 8N1). This is the dedicated 3-pin JST
+   debug UART connector between the HDMI ports of the Raspberry Pi 5, which can
+   be connected with the Raspberry Pi Debug Probe or an USB-to-serial adapter
+   (3.3V levels). On earlier models, where UART10 is not available, UART0 on
+   GPIO14/15 (header pins 8/10) is used instead. The device is selected with
+   RESET_SERIAL_DEVICE in kernel.cpp. To see the log output on this interface
+   too, add "logdev=ttyS11" to cmdline.txt (Raspberry Pi 5).
 
    a) Type "REBOOT circle" and Enter in a terminal program (e.g. minicom,
       PuTTY). "PING" is answered with "PONG".
