@@ -1,0 +1,78 @@
+README
+
+This library provides a software reset (reboot) API for Circle applications.
+A reset of the Raspberry Pi can be triggered by:
+
+* Keyboard:	Ctrl+Alt+Del on an USB keyboard (hot-plugging is supported)
+* GPIO:		an input (e.g. a push button), which is active for a given time
+* Network:	an UDP command "REBOOT [password]" over Ethernet (or WLAN)
+* Application:	a call to CSoftReset::RequestReset()
+
+The trigger sources only request the reset, which is safe from any context
+(also from interrupt handlers). The reset is performed in CSoftReset::Update(),
+which must be called continuously from TASK_LEVEL (e.g. from the main loop).
+Before the reboot an optional reset handler is called, which can be used to
+bring the application into a safe state.
+
+USAGE
+
+	#include <softreset/softreset.h>
+
+	CSoftReset SoftReset;
+
+	SoftReset.RegisterResetHandler (MyResetHandler, this);	// optional
+	SoftReset.EnableKeyboard ();
+	SoftReset.EnableGPIO (17, TRUE, 2000);		// GPIO17 low for 2 seconds
+	SoftReset.EnableNetwork (&m_Net, 5050, "secret");
+
+	while (1)
+	{
+		m_USBHCI.UpdatePlugAndPlay ();		// for keyboard hot-plugging
+
+		SoftReset.Update ();			// reboots, if requested
+
+		// ... application work ...
+	}
+
+If you want to perform the reboot yourself (e.g. to shutdown the application
+in an orderly way), call SetAutoReboot (FALSE). Then Update() returns TRUE, when
+a reset has been requested, and the application can return ShutdownReboot from
+CKernel::Run() or call CSoftReset::Reboot().
+
+EnableGPIO() has an option bImmediate. If set, the system reboots directly from
+the timer interrupt (without calling the reset handler), so that a reset is
+possible even if the application does not call Update() any more (e.g. if it
+hangs in a loop).
+
+NETWORK PROTOCOL
+
+The library listens on the given UDP port (default 5050), after the network is
+up. Each UDP datagram contains one command (case insensitive, a trailing newline
+is ignored) and is answered with one UDP datagram:
+
+	REBOOT [password]	"OK" or "ERROR Access denied"
+	PING			"PONG"
+
+The command is not encrypted. Use it in trusted networks only. The Python script
+sample/53-softreset/softreset.py can be used to send the commands.
+
+REQUIREMENTS
+
+* Keyboard reset: USB library (lib/usb, lib/input), CUSBHCIDevice
+* Network reset: network library (lib/net), CNetSubSystem and CScheduler
+* GPIO reset: CTimer (a kernel timer polls the input every 10 ms)
+
+Libraries to be linked (in this order):
+
+	addon/softreset/libsoftreset.a
+	lib/usb/libusb.a
+	lib/input/libinput.a
+	lib/fs/libfs.a
+	lib/net/libnet.a
+	lib/sched/libsched.a
+	lib/libcircle.a
+
+Only one instance of CSoftReset is allowed. Build the library with:
+
+	cd addon/softreset
+	make

@@ -1,0 +1,45 @@
+README
+
+This sample demonstrates the software reset library in addon/softreset. The
+Raspberry Pi can be rebooted from three different sources:
+
+1. Keyboard: Press Ctrl+Alt+Del on an USB keyboard. The keyboard can be
+   attached at any time (USB plug-and-play is enabled).
+
+2. GPIO: Connect a push button between GPIO17 (header pin 11) and GND. The
+   internal pull-up resistor is enabled. Hold the button for 2 seconds to reboot.
+   The input must have been released once after boot, before it can trigger a
+   reset, so that a stuck button does not lead to a reset loop.
+
+3. Ethernet: Send the UDP command "REBOOT circle" to port 5050. The IP address
+   is obtained using DHCP and displayed on the screen. You can use the included
+   Python 3 script on your host computer:
+
+	python3 softreset.py 192.168.0.123 circle
+
+   The script prints "OK" when the command has been accepted. You can check if
+   the system is alive with:
+
+	python3 softreset.py 192.168.0.123 --ping
+
+   It is also possible to use netcat:
+
+	echo "REBOOT circle" | nc -u -w1 192.168.0.123 5050
+
+Before the system reboots, a reset handler of the application is called (here
+it only switches off the ACT LED), which can be used to bring the application
+into a safe state. The GPIO pin, hold time, UDP port and password can be
+modified at the top of kernel.cpp.
+
+The addon/softreset library has to be built first:
+
+	cd addon/softreset
+	make
+
+Then build this sample:
+
+	cd sample/53-softreset
+	make
+
+Please note that the network reset command is not encrypted. Use it in trusted
+networks only.
