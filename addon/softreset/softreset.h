@@ -2,7 +2,8 @@
 // softreset.h
 //
 // Software reset (reboot) of the Raspberry Pi, triggered by an USB keyboard,
-// a GPIO input (e.g. a push button) or a command over the Ethernet (UDP)
+// a GPIO input (e.g. a push button), the serial console or a command over the
+// Ethernet (UDP)
 //
 // Circle - A C++ bare metal environment for Raspberry Pi
 //
@@ -26,16 +27,21 @@
 #include <circle/net/netsubsystem.h>
 #include <circle/net/socket.h>
 #include <circle/gpiopin.h>
+#include <circle/serial.h>
 #include <circle/device.h>
 #include <circle/timer.h>
 #include <circle/string.h>
 #include <circle/macros.h>
 #include <circle/types.h>
 
+#define SOFTRESET_MAX_COMMAND	128		///< Maximum length of a command
+
 /// \brief Software reset of the Raspberry Pi from different trigger sources
 /// \details A reset can be triggered by:
 /// - Keyboard: pressing Ctrl+Alt+Del on an USB keyboard ("ukbd1", hot-plug supported)
 /// - GPIO: holding an input pin (e.g. a push button to GND) active for some time
+/// - Serial: receiving a magic string (compatible with REBOOTMAGIC of "make flash")\n
+///   or the command "REBOOT [password]" on the serial console
 /// - Network: sending the UDP command "REBOOT [password]" to a port
 /// - Application: calling RequestReset()
 ///
@@ -55,6 +61,7 @@ public:
 		SourceKeyboard,
 		SourceGPIO,
 		SourceNetwork,
+		SourceSerial,
 		SourceApplication,
 		SourceUnknown
 	};
@@ -66,6 +73,7 @@ public:
 
 	static const u16 DefaultPort = 5050;		///< Default UDP port for network reset
 	static const unsigned DefaultHoldMs = 1000;	///< Default hold time of the GPIO input
+	static const char DefaultSerialMagic[];		///< Default magic string for serial reset
 
 public:
 	CSoftReset (void);
@@ -103,6 +111,30 @@ public:
 	boolean EnableNetwork (CNetSubSystem *pNetSubSystem, u16 usPort = DefaultPort,
 			       const char *pPassword = 0);
 
+	/// \brief Enable reset by receiving a magic string on the serial interface
+	/// \param pSerial Pointer to the serial device (must use the interrupt driver,\n
+	///	   i.e. CSerialDevice has been constructed with a CInterruptSystem pointer)
+	/// \param pMagic Magic string (must remain valid), use the same string for the\n
+	///	   variable REBOOTMAGIC in Config.mk to reboot automatically on "make flash"
+	/// \return Operation successful?
+	/// \note The received data is only scanned, it is still available to the\n
+	///	   application with CSerialDevice::Read(). The magic string is detected in\n
+	///	   interrupt context, even if Update() is not called.
+	boolean EnableSerialMagic (CSerialDevice *pSerial, const char *pMagic = DefaultSerialMagic);
+
+	/// \brief Enable reset by a command, which is typed on the serial console
+	/// \param pDevice Pointer to the serial device (or any other character device)
+	/// \param pPassword Password, which must follow the command (0 for none)
+	/// \param bEcho Echo the received characters (for use with a terminal program)
+	/// \return Operation successful?
+	/// \note Commands are terminated with CR or LF, backspace is supported:\n
+	///	  "REBOOT [password]" - reboot the system (answer "OK")\n
+	///	  "PING"              - check, if the system is alive (answer "PONG")
+	/// \note The received data is consumed by Update(). Do not read from this\n
+	///	  device in the application.
+	boolean EnableSerialConsole (CDevice *pDevice, const char *pPassword = 0,
+				     boolean bEcho = TRUE);
+
 	/// \param pHandler Handler to be called before the system reboots
 	/// \param pParam User parameter handed over to the handler
 	void RegisterResetHandler (TResetHandler *pHandler, void *pParam = 0);
@@ -135,9 +167,13 @@ public:
 private:
 	void UpdateKeyboard (void);
 	void UpdateNetwork (void);
+	void UpdateSerialConsole (void);
 
-	void HandleCommand (char *pCommand, const CIPAddress &rSender, u16 usSenderPort);
+	/// \return Reply to be sent back
+	const char *HandleCommand (char *pCommand, const char *pPassword,
+				   TSource Source, const char *pFrom);
 	void SendReply (const char *pReply, const CIPAddress &rSender, u16 usSenderPort);
+	void SerialWrite (const char *pString);
 
 	void PerformReset (void) NORETURN;
 
@@ -146,6 +182,8 @@ private:
 
 	void PollGPIO (void);
 	static void GPIOTimerHandler (TKernelTimerHandle hTimer, void *pParam, void *pContext);
+
+	static void SerialMagicHandler (void);
 
 private:
 	volatile TSource m_Source;
@@ -174,6 +212,15 @@ private:
 	CSocket *m_pSocket;
 	u16 m_usPort;
 	CString m_Password;
+
+	// Serial
+	CSerialDevice *m_pSerialMagic;
+	CDevice *m_pSerialConsole;
+	CString m_SerialPassword;
+	boolean m_bSerialEcho;
+	char m_SerialLine[SOFTRESET_MAX_COMMAND+1];
+	unsigned m_nSerialLineLength;
+	boolean m_bSerialOverflow;
 
 	static CSoftReset *s_pThis;
 };

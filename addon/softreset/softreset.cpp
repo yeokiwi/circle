@@ -28,12 +28,14 @@
 
 #define GPIO_POLL_TICKS		1		// poll the GPIO input every 10 ms (HZ = 100)
 
-#define MAX_COMMAND_SIZE	128
+#define MAX_COMMAND_SIZE	SOFTRESET_MAX_COMMAND
 #define MAX_PACKETS_PER_UPDATE	4
 
 #define REBOOT_DELAY_MS		200		// let the log and network reply go out
 
 LOGMODULE ("softreset");
+
+const char CSoftReset::DefaultSerialMagic[] = "circle-reboot";
 
 CSoftReset *CSoftReset::s_pThis = 0;
 
@@ -54,7 +56,12 @@ CSoftReset::CSoftReset (void)
 	m_hGPIOTimer (0),
 	m_pNetSubSystem (0),
 	m_pSocket (0),
-	m_usPort (DefaultPort)
+	m_usPort (DefaultPort),
+	m_pSerialMagic (0),
+	m_pSerialConsole (0),
+	m_bSerialEcho (TRUE),
+	m_nSerialLineLength (0),
+	m_bSerialOverflow (FALSE)
 {
 	assert (s_pThis == 0);
 	s_pThis = this;
@@ -83,6 +90,10 @@ CSoftReset::~CSoftReset (void)
 	m_pSocket = 0;
 
 	m_pResetHandler = 0;
+
+	// the serial magic handler cannot be unregistered, it checks s_pThis
+	m_pSerialMagic = 0;
+	m_pSerialConsole = 0;
 
 	s_pThis = 0;
 }
@@ -172,6 +183,59 @@ boolean CSoftReset::EnableNetwork (CNetSubSystem *pNetSubSystem, u16 usPort,
 	return TRUE;
 }
 
+boolean CSoftReset::EnableSerialMagic (CSerialDevice *pSerial, const char *pMagic)
+{
+	if (m_pSerialMagic != 0)
+	{
+		LOGERR ("Serial magic reset already enabled");
+
+		return FALSE;
+	}
+
+	if (   pSerial == 0
+	    || pMagic == 0
+	    || *pMagic == '\0')
+	{
+		return FALSE;
+	}
+
+	pSerial->RegisterMagicReceivedHandler (pMagic, SerialMagicHandler);
+
+	m_pSerialMagic = pSerial;
+
+	LOGNOTE ("Serial magic reset enabled (\"%s\")", pMagic);
+
+	return TRUE;
+}
+
+boolean CSoftReset::EnableSerialConsole (CDevice *pDevice, const char *pPassword,
+					 boolean bEcho)
+{
+	if (m_pSerialConsole != 0)
+	{
+		LOGERR ("Serial console reset already enabled");
+
+		return FALSE;
+	}
+
+	if (pDevice == 0)
+	{
+		return FALSE;
+	}
+
+	m_SerialPassword = pPassword != 0 ? pPassword : "";
+	m_bSerialEcho = bEcho;
+	m_nSerialLineLength = 0;
+	m_bSerialOverflow = FALSE;
+
+	m_pSerialConsole = pDevice;
+
+	LOGNOTE ("Serial console reset enabled (type \"REBOOT%s\")",
+		 m_SerialPassword.GetLength () > 0 ? " <password>" : "");
+
+	return TRUE;
+}
+
 void CSoftReset::RegisterResetHandler (TResetHandler *pHandler, void *pParam)
 {
 	m_pResetParam = pParam;
@@ -219,6 +283,11 @@ boolean CSoftReset::Update (void)
 		UpdateNetwork ();
 	}
 
+	if (m_pSerialConsole != 0)
+	{
+		UpdateSerialConsole ();
+	}
+
 	if (m_Source == SourceNone)
 	{
 		return FALSE;
@@ -245,6 +314,7 @@ const char *CSoftReset::GetSourceName (TSource Source)
 	case SourceKeyboard:	return "keyboard";
 	case SourceGPIO:	return "GPIO";
 	case SourceNetwork:	return "network";
+	case SourceSerial:	return "serial";
 	case SourceApplication:	return "application";
 	default:		return "unknown";
 	}
@@ -420,13 +490,28 @@ void CSoftReset::UpdateNetwork (void)
 
 		Buffer[nResult] = '\0';
 
-		HandleCommand (Buffer, Sender, usSenderPort);
+		CString SenderString;
+		Sender.Format (&SenderString);
+
+		const char *pReply = HandleCommand (Buffer, m_Password, SourceNetwork,
+						    SenderString);
+		SendReply (pReply, Sender, usSenderPort);
 	}
 }
 
-void CSoftReset::HandleCommand (char *pCommand, const CIPAddress &rSender, u16 usSenderPort)
+const char *CSoftReset::HandleCommand (char *pCommand, const char *pPassword,
+					TSource Source, const char *pFrom)
 {
-	// strip trailing white space (e.g. newline)
+	assert (pCommand != 0);
+	assert (pPassword != 0);
+	assert (pFrom != 0);
+
+	// strip leading and trailing white space (e.g. newline)
+	while (*pCommand == ' ' || *pCommand == '\t')
+	{
+		pCommand++;
+	}
+
 	size_t nLength = strlen (pCommand);
 	while (   nLength > 0
 	       && (   pCommand[nLength-1] == ' '  || pCommand[nLength-1] == '\t'
@@ -450,35 +535,28 @@ void CSoftReset::HandleCommand (char *pCommand, const CIPAddress &rSender, u16 u
 		pArgument = pCommand + nLength;		// empty string
 	}
 
-	CString SenderString;
-	rSender.Format (&SenderString);
-
 	if (strcasecmp (pCommand, "PING") == 0)
 	{
-		SendReply ("PONG\n", rSender, usSenderPort);
+		return "PONG\n";
 	}
-	else if (strcasecmp (pCommand, "REBOOT") == 0)
+
+	if (strcasecmp (pCommand, "REBOOT") == 0)
 	{
-		if (strcmp (pArgument, m_Password) != 0)
+		if (strcmp (pArgument, pPassword) != 0)
 		{
-			LOGWARN ("Reset command from %s rejected (wrong password)",
-				 (const char *) SenderString);
+			LOGWARN ("Reset command from %s rejected (wrong password)", pFrom);
 
-			SendReply ("ERROR Access denied\n", rSender, usSenderPort);
-
-			return;
+			return "ERROR Access denied\n";
 		}
 
-		LOGNOTE ("Reset command from %s", (const char *) SenderString);
+		LOGNOTE ("Reset command from %s", pFrom);
 
-		SendReply ("OK\n", rSender, usSenderPort);
+		RequestReset (Source);
 
-		RequestReset (SourceNetwork);
+		return "OK\n";
 	}
-	else
-	{
-		SendReply ("ERROR Unknown command\n", rSender, usSenderPort);
-	}
+
+	return "ERROR Unknown command\n";
 }
 
 void CSoftReset::SendReply (const char *pReply, const CIPAddress &rSender, u16 usSenderPort)
@@ -487,4 +565,102 @@ void CSoftReset::SendReply (const char *pReply, const CIPAddress &rSender, u16 u
 	assert (pReply != 0);
 
 	m_pSocket->SendTo (pReply, strlen (pReply), MSG_DONTWAIT, rSender, usSenderPort);
+}
+
+void CSoftReset::UpdateSerialConsole (void)
+{
+	assert (m_pSerialConsole != 0);
+
+	char Buffer[64];
+	int nResult;
+	while ((nResult = m_pSerialConsole->Read (Buffer, sizeof Buffer)) > 0)
+	{
+		for (int i = 0; i < nResult; i++)
+		{
+			char chChar = Buffer[i];
+
+			switch (chChar)
+			{
+			case '\r':
+			case '\n':
+				if (m_bSerialEcho)
+				{
+					SerialWrite ("\r\n");
+				}
+
+				if (m_bSerialOverflow)
+				{
+					SerialWrite ("ERROR Command too long\r\n");
+				}
+				else if (m_nSerialLineLength > 0)
+				{
+					m_SerialLine[m_nSerialLineLength] = '\0';
+
+					const char *pReply = HandleCommand (m_SerialLine,
+									    m_SerialPassword,
+									    SourceSerial,
+									    "serial console");
+					// terminal needs CR LF
+					CString Reply (pReply);
+					Reply.Replace ("\n", "\r\n");
+					SerialWrite (Reply);
+				}
+
+				m_nSerialLineLength = 0;
+				m_bSerialOverflow = FALSE;
+				break;
+
+			case '\b':
+			case '\x7F':
+				if (m_nSerialLineLength > 0)
+				{
+					m_nSerialLineLength--;
+
+					if (m_bSerialEcho)
+					{
+						SerialWrite ("\b \b");
+					}
+				}
+				break;
+
+			default:
+				if (   chChar < ' '
+				    || chChar > '~')
+				{
+					break;		// ignore control characters
+				}
+
+				if (m_nSerialLineLength >= MAX_COMMAND_SIZE)
+				{
+					m_bSerialOverflow = TRUE;
+
+					break;
+				}
+
+				m_SerialLine[m_nSerialLineLength++] = chChar;
+
+				if (m_bSerialEcho)
+				{
+					m_pSerialConsole->Write (&chChar, 1);
+				}
+				break;
+			}
+		}
+	}
+}
+
+void CSoftReset::SerialWrite (const char *pString)
+{
+	assert (m_pSerialConsole != 0);
+	assert (pString != 0);
+
+	m_pSerialConsole->Write (pString, strlen (pString));
+}
+
+void CSoftReset::SerialMagicHandler (void)
+{
+	if (s_pThis != 0)
+	{
+		s_pThis->RequestReset (SourceSerial);
+	}
 }

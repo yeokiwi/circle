@@ -27,6 +27,12 @@
 #define RESET_UDP_PORT		CSoftReset::DefaultPort
 #define RESET_PASSWORD		"circle"	// set to 0 to disable the password
 
+// Reset by serial interface (115200 baud, 8N1):
+// - magic string, set REBOOTMAGIC = circle-reboot in Config.mk for "make flash"
+// - console command "REBOOT <password>" typed in a terminal program
+#define RESET_SERIAL_MAGIC	CSoftReset::DefaultSerialMagic
+#define RESET_SERIAL_PASSWORD	RESET_PASSWORD
+
 // Network configuration
 #define USE_DHCP
 
@@ -41,6 +47,7 @@ LOGMODULE ("kernel");
 
 CKernel::CKernel (void)
 :	m_Screen (m_Options.GetWidth (), m_Options.GetHeight ()),
+	m_Serial (&m_Interrupt),			// interrupt driver (needed for magic)
 	m_Timer (&m_Interrupt),
 	m_Logger (m_Options.GetLogLevel (), &m_Timer),
 	m_USBHCI (&m_Interrupt, &m_Timer, TRUE)		// TRUE: enable plug-and-play
@@ -61,6 +68,11 @@ boolean CKernel::Initialize (void)
 
 	if (bOK)
 	{
+		bOK = m_Interrupt.Initialize ();	// before the serial interrupt driver
+	}
+
+	if (bOK)
+	{
 		bOK = m_Screen.Initialize ();
 	}
 
@@ -78,11 +90,6 @@ boolean CKernel::Initialize (void)
 		}
 
 		bOK = m_Logger.Initialize (pTarget);
-	}
-
-	if (bOK)
-	{
-		bOK = m_Interrupt.Initialize ();
 	}
 
 	if (bOK)
@@ -113,6 +120,8 @@ TShutdownMode CKernel::Run (void)
 	m_SoftReset.EnableKeyboard ();
 	m_SoftReset.EnableGPIO (RESET_GPIO_PIN, TRUE, RESET_HOLD_MS);
 	m_SoftReset.EnableNetwork (&m_Net, RESET_UDP_PORT, RESET_PASSWORD);
+	m_SoftReset.EnableSerialMagic (&m_Serial, RESET_SERIAL_MAGIC);
+	m_SoftReset.EnableSerialConsole (&m_Serial, RESET_SERIAL_PASSWORD);
 
 	LOGNOTE ("The system can be rebooted by:");
 	LOGNOTE ("- pressing Ctrl+Alt+Del on an USB keyboard");
@@ -121,6 +130,11 @@ TShutdownMode CKernel::Run (void)
 	LOGNOTE ("- sending \"REBOOT%s%s\" to UDP port %u (e.g. with softreset.py)",
 		 RESET_PASSWORD != 0 ? " " : "", RESET_PASSWORD != 0 ? RESET_PASSWORD : "",
 		 (unsigned) RESET_UDP_PORT);
+	LOGNOTE ("- sending \"%s\" over the serial interface (REBOOTMAGIC)",
+		 RESET_SERIAL_MAGIC);
+	LOGNOTE ("- typing \"REBOOT%s%s\" in a terminal on the serial interface",
+		 RESET_SERIAL_PASSWORD != 0 ? " " : "",
+		 RESET_SERIAL_PASSWORD != 0 ? RESET_SERIAL_PASSWORD : "");
 
 	unsigned nStartTicks = m_Timer.GetClockTicks ();
 	unsigned nLastSeconds = 0;

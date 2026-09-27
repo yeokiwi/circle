@@ -1,7 +1,7 @@
 README
 
 This sample demonstrates the software reset library in addon/softreset. The
-Raspberry Pi can be rebooted from three different sources:
+Raspberry Pi can be rebooted from four different sources:
 
 1. Keyboard: Press Ctrl+Alt+Del on an USB keyboard. The keyboard can be
    attached at any time (USB plug-and-play is enabled).
@@ -26,9 +26,25 @@ Raspberry Pi can be rebooted from three different sources:
 
 	echo "REBOOT circle" | nc -u -w1 192.168.0.123 5050
 
+4. Serial interface (115200 baud, 8N1, GPIO14/15 = header pins 8/10, e.g. with
+   an USB-to-serial adapter):
+
+   a) Type "REBOOT circle" and Enter in a terminal program (e.g. minicom,
+      PuTTY). "PING" is answered with "PONG".
+
+   b) Send the magic string "circle-reboot", e.g. with:
+
+	python3 ../../tools/reboottool.py circle-reboot /dev/ttyUSB0 115200
+
+      If you use the serial bootloader (see doc/bootloader.txt), add this line
+      to Config.mk. Then "make flash" reboots the running sample into the
+      bootloader automatically before a new kernel image is uploaded:
+
+	REBOOTMAGIC = circle-reboot
+
 Before the system reboots, a reset handler of the application is called (here
 it only switches off the ACT LED), which can be used to bring the application
-into a safe state. The GPIO pin, hold time, UDP port and password can be
+into a safe state. The GPIO pin, hold time, UDP port, magic string and passwords can be
 modified at the top of kernel.cpp.
 
 The addon/softreset library has to be built first:
@@ -41,5 +57,5 @@ Then build this sample:
 	cd sample/53-softreset
 	make
 
-Please note that the network reset command is not encrypted. Use it in trusted
+Please note that the network and serial reset commands are not encrypted. Use it in trusted
 networks only.

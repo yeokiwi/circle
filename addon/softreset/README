@@ -5,6 +5,8 @@ A reset of the Raspberry Pi can be triggered by:
 
 * Keyboard:	Ctrl+Alt+Del on an USB keyboard (hot-plugging is supported)
 * GPIO:		an input (e.g. a push button), which is active for a given time
+* Serial:	a magic string (e.g. from "make flash") or the command
+		"REBOOT [password]" typed on the serial console
 * Network:	an UDP command "REBOOT [password]" over Ethernet (or WLAN)
 * Application:	a call to CSoftReset::RequestReset()
 
@@ -24,6 +26,8 @@ USAGE
 	SoftReset.EnableKeyboard ();
 	SoftReset.EnableGPIO (17, TRUE, 2000);		// GPIO17 low for 2 seconds
 	SoftReset.EnableNetwork (&m_Net, 5050, "secret");
+	SoftReset.EnableSerialMagic (&m_Serial, "circle-reboot");
+	SoftReset.EnableSerialConsole (&m_Serial, "secret");
 
 	while (1)
 	{
@@ -44,6 +48,31 @@ the timer interrupt (without calling the reset handler), so that a reset is
 possible even if the application does not call Update() any more (e.g. if it
 hangs in a loop).
 
+SERIAL INTERFACE
+
+There are two modes, which can be used alone or together on the same device:
+
+EnableSerialMagic() lets the serial driver scan the received data for a magic
+string (default "circle-reboot"). The data is not consumed, so the application
+can still read from the serial device. The detection happens in interrupt
+context, so it works even if Update() is not called any more (the reset itself
+is performed in Update(), unless the application hangs). The CSerialDevice must
+use the interrupt driver (constructed with a pointer to CInterruptSystem, which
+must be initialized before the serial device). Set the same string as
+REBOOTMAGIC in Config.mk, then "make flash" reboots a running application into
+the serial bootloader automatically (see doc/bootloader.txt):
+
+	REBOOTMAGIC = circle-reboot
+
+The string can also be sent with tools/reboottool.py.
+
+EnableSerialConsole() accepts line based commands, which are typed in a terminal
+program (e.g. minicom or PuTTY) and terminated with Enter (CR or LF). The same
+commands as for the network are supported (see below), the characters are
+echoed and backspace can be used. This mode works with any character device
+(also with the polling serial driver), but it consumes all received data in
+Update(), so the application must not read from this device itself.
+
 NETWORK PROTOCOL
 
 The library listens on the given UDP port (default 5050), after the network is
@@ -53,7 +82,10 @@ is ignored) and is answered with one UDP datagram:
 	REBOOT [password]	"OK" or "ERROR Access denied"
 	PING			"PONG"
 
-The command is not encrypted. Use it in trusted networks only. The Python script
+The command is not encrypted. Use it in trusted networks only.
+
+The serial console accepts the same commands, the replies are terminated with
+CR LF. The Python script
 sample/53-softreset/softreset.py can be used to send the commands.
 
 REQUIREMENTS
@@ -61,6 +93,7 @@ REQUIREMENTS
 * Keyboard reset: USB library (lib/usb, lib/input), CUSBHCIDevice
 * Network reset: network library (lib/net), CNetSubSystem and CScheduler
 * GPIO reset: CTimer (a kernel timer polls the input every 10 ms)
+* Serial magic reset: CSerialDevice with interrupt driver
 
 Libraries to be linked (in this order):
 
